@@ -1,0 +1,185 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+env.bak/
+venv.bak/
+pyvenv.cfg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+.jupyter/
+
+# PyTorch
+*.pth
+*.pt
+*.ckpt
+lightning_logs/
+
+# TensorFlow
+*.h5
+*.pb
+*.ckpt
+*.meta
+*.index
+saved_model/
+tensorboard/
+
+# Data directories
+datasets/
+raw_data/
+processed_data/
+*.csv
+*.tsv
+*.json
+*.xml
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Output directories
+results/
+logs/
+checkpoints/
+runs/
+wandb/
+mlruns/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Kaggle
+.kaggle/
+kaggle.json
+
+# Model files
+*.pkl
+*.pickle
+*.model
+*.weights
+*.bin
+*.safetensors
+
+# Large media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.svg
+*.ico
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+
+# Documentation build
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Profiling
+*.prof
+*.lprof
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Exceptions - keep these files
+!.gitkeep
+!README.md
+!requirements*.txt
+!*.sh
+!lab*/outputs/.gitkeep
+!**/sample*.png
+!**/example*.jpg
+!docs/**/*.png
+!docs/**/*.jpg
