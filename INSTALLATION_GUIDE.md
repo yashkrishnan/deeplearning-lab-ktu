@@ -354,7 +354,7 @@ python test_installation.py
 
 ```bash
 # Test with Lab 1
-cd lab1_image_processing
+cd lab_01_image_processing
 python image_processing.py
 ```
 

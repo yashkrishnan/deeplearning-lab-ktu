@@ -15,7 +15,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 ## 🗂️ Lab Activities
 
 ### Lab 1: Basic Image Processing Operations
-**Directory:** `lab1_image_processing/`
+**Directory:** `lab_01_image_processing/`
 - Histogram equalization
 - Thresholding techniques
 - Edge detection (Sobel, Canny)
@@ -23,19 +23,19 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Morphological operations
 
 ### Lab 2: CIFAR-10 Classifiers
-**Directory:** `lab2_cifar10_classifiers/`
+**Directory:** `lab_02_cifar10_classifiers/`
 - KNN classifier implementation
 - 3-layer neural network classifier
 - SVM/Softmax classifier comparison
 
 ### Lab 3: Batch Normalization and Dropout Study
-**Directory:** `lab3_batchnorm_dropout/`
+**Directory:** `lab_03_batchnorm_dropout/`
 - Effect of batch normalization on training
 - Impact of dropout on overfitting
 - Comparative analysis with visualizations
 
 ### Lab 4: Image Labeling Tools Demonstration
-**Directory:** `lab4_labeling_tools/`
+**Directory:** `lab_04_labeling_tools/`
 **Program:** `labeling_demo.py`
 - Synthetic image generation with annotations
 - Format conversions (COCO, YOLO, Pascal VOC)
@@ -43,7 +43,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Statistics generation
 
 ### Lab 5: Image Segmentation with UNet
-**Directory:** `lab5_segmentation/`
+**Directory:** `lab_05_segmentation/`
 **Program:** `segmentation_demo.py`
 - UNet architecture implementation
 - Comparison with simple CNN baseline
@@ -51,7 +51,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Synthetic segmentation dataset
 
 ### Lab 6: Object Detection with YOLO
-**Directory:** `lab6_object_detection/`
+**Directory:** `lab_06_object_detection/`
 **Program:** `object_detection_demo.py`
 - YOLO-style object detector
 - Bounding box prediction and classification
@@ -59,7 +59,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Detection visualization
 
 ### Lab 7: Image Captioning with RNN/LSTM
-**Directory:** `lab7_image_captioning/`
+**Directory:** `lab_07_image_captioning/`
 **Program:** `image_captioning_demo.py`
 - CNN encoder + RNN/LSTM decoder
 - Comparison between Vanilla RNN and LSTM
@@ -67,7 +67,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Synthetic image-caption pairs
 
 ### Lab 8: Chatbot with Bi-directional LSTM
-**Directory:** `lab8_chatbot/`
+**Directory:** `lab_08_chatbot/`
 **Program:** `chatbot_demo.py`
 - Bi-directional LSTM for intent classification
 - Comparison with unidirectional LSTM
@@ -75,7 +75,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Interactive demo
 
 ### Lab 9: Time Series Forecasting with LSTM
-**Directory:** `lab9_time_series/`
+**Directory:** `lab_09_time_series/`
 **Program:** `time_series_demo.py`
 - LSTM and GRU for forecasting
 - Multi-step ahead prediction
@@ -83,7 +83,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Evaluation metrics (MSE, MAE, RMSE, MAPE)
 
 ### Lab 10: Sequence to Sequence Learning
-**Directory:** `lab10_seq2seq/`
+**Directory:** `lab_10_seq2seq/`
 **Program:** `seq2seq_demo.py`
 - Encoder-decoder architecture
 - Attention mechanism
@@ -111,43 +111,43 @@ Each lab is self-contained with an executable Python program. Navigate to the la
 
 ```bash
 # Lab 1: Image Processing
-cd lab1_image_processing
+cd lab_01_image_processing
 python image_processing.py
 
 # Lab 2: CIFAR-10 Classifiers
-cd lab2_cifar10_classifiers
+cd lab_02_cifar10_classifiers
 python cifar10_classifiers.py
 
 # Lab 3: Batch Normalization & Dropout
-cd lab3_batchnorm_dropout
+cd lab_03_batchnorm_dropout
 python batchnorm_dropout_study.py
 
 # Lab 4: Labeling Tools Demo
-cd lab4_labeling_tools
+cd lab_04_labeling_tools
 python labeling_demo.py
 
 # Lab 5: Image Segmentation
-cd lab5_segmentation
+cd lab_05_segmentation
 python segmentation_demo.py
 
 # Lab 6: Object Detection
-cd lab6_object_detection
+cd lab_06_object_detection
 python object_detection_demo.py
 
 # Lab 7: Image Captioning
-cd lab7_image_captioning
+cd lab_07_image_captioning
 python image_captioning_demo.py
 
 # Lab 8: Chatbot
-cd lab8_chatbot
+cd lab_08_chatbot
 python chatbot_demo.py
 
 # Lab 9: Time Series Forecasting
-cd lab9_time_series
+cd lab_09_time_series
 python time_series_demo.py
 
 # Lab 10: Sequence to Sequence
-cd lab10_seq2seq
+cd lab_10_seq2seq
 python seq2seq_demo.py
 ```
 

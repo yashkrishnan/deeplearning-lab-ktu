@@ -126,11 +126,11 @@ find . -type d -name "data" -exec du -sh {} \;
 
 You should see directories like:
 ```
-800M    ./lab5_segmentation/data
-1.0G    ./lab7_image_captioning/data
-10M     ./lab8_chatbot/data
-50M     ./lab9_time_series/data
-50M     ./lab10_seq2seq/data
+800M    ./lab_05_segmentation/data
+1.0G    ./lab_07_image_captioning/data
+10M     ./lab_08_chatbot/data
+50M     ./lab_09_time_series/data
+50M     ./lab_10_seq2seq/data
 ```
 
 ## 🎓 Running Labs After Setup
@@ -138,22 +138,22 @@ You should see directories like:
 ### Labs 1-3 (No Setup Needed)
 ```bash
 # Lab 1: Image Processing
-cd lab1_image_processing
+cd lab_01_image_processing
 python3 image_processing.py
 
 # Lab 2: CIFAR-10 Classifiers
-cd ../lab2_cifar10_classifiers
+cd ../lab_02_cifar10_classifiers
 python3 cifar10_classifiers.py
 
 # Lab 3: Batch Normalization & Dropout
-cd ../lab3_batchnorm_dropout
+cd ../lab_03_batchnorm_dropout
 python3 batchnorm_dropout_study.py
 ```
 
 ### Labs 4-10 (After Dataset Download)
 Each lab has a README.md with specific instructions:
 ```bash
-cd lab7_image_captioning
+cd lab_07_image_captioning
 cat README.md  # Read instructions
 # Then implement based on the guide
 ```
@@ -227,7 +227,7 @@ df -h
 ```bash
 cd dl-lab
 pip install -r requirements.txt
-cd lab1_image_processing
+cd lab_01_image_processing
 python3 image_processing.py
 ```
 **Time**: 5 minutes setup + 30 seconds execution

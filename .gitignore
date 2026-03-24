@@ -36,36 +36,12 @@ pyvenv.cfg
 .jupyter/
 
 # PyTorch
-*.pth
-*.pt
-*.ckpt
 lightning_logs/
 
 # TensorFlow
-*.h5
-*.pb
-*.ckpt
-*.meta
-*.index
-saved_model/
 tensorboard/
 
-# Data directories
-datasets/
-raw_data/
-processed_data/
-*.csv
-*.tsv
-*.json
-*.xml
-*.zip
-*.tar
-*.tar.gz
-*.rar
-*.7z
-
 # Output directories
-results/
 logs/
 checkpoints/
 runs/
@@ -98,34 +74,6 @@ Desktop.ini
 .kaggle/
 kaggle.json
 
-# Model files
-*.pkl
-*.pickle
-*.model
-*.weights
-*.bin
-*.safetensors
-
-# Large media files
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.tiff
-*.tif
-*.svg
-*.ico
-*.mp4
-*.avi
-*.mov
-*.wmv
-*.flv
-*.webm
-*.mp3
-*.wav
-*.flac
-
 # Documentation build
 docs/_build/
 docs/_static/
@@ -142,15 +90,6 @@ htmlcov/
 coverage.xml
 *.cover
 .hypothesis/
-
-# Profiling
-*.prof
-*.lprof
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
 
 # Logs
 *.log

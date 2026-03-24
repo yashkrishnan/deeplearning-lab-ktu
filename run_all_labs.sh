@@ -55,16 +55,16 @@ run_lab() {
 start_time=$(date +%s)
 
 # Run all labs
-run_lab 1 "Basic Image Processing" "lab1_image_processing" "image_processing.py"
-run_lab 2 "CIFAR-10 Classifiers" "lab2_cifar10_classifiers" "cifar10_classifiers.py"
-run_lab 3 "Batch Normalization & Dropout" "lab3_batchnorm_dropout" "batchnorm_dropout_study.py"
-run_lab 4 "Labeling Tools Demo" "lab4_labeling_tools" "labeling_demo.py"
-run_lab 5 "Image Segmentation" "lab5_segmentation" "segmentation_demo.py"
-run_lab 6 "Object Detection" "lab6_object_detection" "object_detection_demo.py"
-run_lab 7 "Image Captioning" "lab7_image_captioning" "image_captioning_demo.py"
-run_lab 8 "Chatbot" "lab8_chatbot" "chatbot_demo.py"
-run_lab 9 "Time Series Forecasting" "lab9_time_series" "time_series_demo.py"
-run_lab 10 "Sequence to Sequence" "lab10_seq2seq" "seq2seq_demo.py"
+run_lab 1 "Basic Image Processing" "lab_01_image_processing" "image_processing.py"
+run_lab 2 "CIFAR-10 Classifiers" "lab_02_cifar10_classifiers" "cifar10_classifiers.py"
+run_lab 3 "Batch Normalization & Dropout" "lab_03_batchnorm_dropout" "batchnorm_dropout_study.py"
+run_lab 4 "Labeling Tools Demo" "lab_04_labeling_tools" "labeling_demo.py"
+run_lab 5 "Image Segmentation" "lab_05_segmentation" "segmentation_demo.py"
+run_lab 6 "Object Detection" "lab_06_object_detection" "object_detection_demo.py"
+run_lab 7 "Image Captioning" "lab_07_image_captioning" "image_captioning_demo.py"
+run_lab 8 "Chatbot" "lab_08_chatbot" "chatbot_demo.py"
+run_lab 9 "Time Series Forecasting" "lab_09_time_series" "time_series_demo.py"
+run_lab 10 "Sequence to Sequence" "lab_10_seq2seq" "seq2seq_demo.py"
 
 # End timer
 end_time=$(date +%s)

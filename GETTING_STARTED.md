@@ -65,40 +65,40 @@ dl-lab/
 ├── requirements.txt                   # All dependencies
 ├── run_all_labs.sh                    # Run all labs script
 │
-├── lab1_image_processing/             # Basic image operations
+├── lab_01_image_processing/             # Basic image operations
 │   ├── README.md
 │   ├── image_processing.py
 │   └── outputs/
 │
-├── lab2_cifar10_classifiers/          # Classification comparison
+├── lab_02_cifar10_classifiers/          # Classification comparison
 │   ├── README.md
 │   ├── cifar10_classifiers.py
 │   └── outputs/
 │
-├── lab3_batchnorm_dropout/            # Regularization study
+├── lab_03_batchnorm_dropout/            # Regularization study
 │   ├── README.md
 │   ├── batchnorm_dropout_study.py
 │   └── outputs/
 │
-├── lab4_labeling_tools/               # Annotation guide
+├── lab_04_labeling_tools/               # Annotation guide
 │   └── README.md
 │
-├── lab5_segmentation/                 # Image segmentation
+├── lab_05_segmentation/                 # Image segmentation
 │   └── README.md
 │
-├── lab6_object_detection/             # Object detection
+├── lab_06_object_detection/             # Object detection
 │   └── README.md
 │
-├── lab7_image_captioning/             # Image to text
+├── lab_07_image_captioning/             # Image to text
 │   └── README.md
 │
-├── lab8_chatbot/                      # Conversational AI
+├── lab_08_chatbot/                      # Conversational AI
 │   └── README.md
 │
-├── lab9_time_series/                  # Time series forecasting
+├── lab_09_time_series/                  # Time series forecasting
 │   └── README.md
 │
-└── lab10_seq2seq/                     # Sequence to sequence
+└── lab_10_seq2seq/                     # Sequence to sequence
     └── README.md
 ```
 
@@ -106,7 +106,7 @@ dl-lab/
 
 ### Lab 1: Image Processing
 ```bash
-cd lab1_image_processing
+cd lab_01_image_processing
 python3 image_processing.py
 ```
 **Time**: ~30 seconds  
@@ -114,7 +114,7 @@ python3 image_processing.py
 
 ### Lab 2: CIFAR-10 Classifiers
 ```bash
-cd lab2_cifar10_classifiers
+cd lab_02_cifar10_classifiers
 python3 cifar10_classifiers.py
 ```
 **Time**: ~3-4 minutes  
@@ -122,7 +122,7 @@ python3 cifar10_classifiers.py
 
 ### Lab 3: Batch Normalization & Dropout
 ```bash
-cd lab3_batchnorm_dropout
+cd lab_03_batchnorm_dropout
 python3 batchnorm_dropout_study.py
 ```
 **Time**: ~3-4 minutes  

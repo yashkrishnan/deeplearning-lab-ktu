@@ -18,40 +18,40 @@ dl-lab/
 ├── requirements.txt            # All dependencies
 ├── run_all_labs.sh            # Automated lab runner
 │
-├── lab1_image_processing/      # ✅ COMPLETE - Executable
+├── lab_01_image_processing/      # ✅ COMPLETE - Executable
 │   ├── README.md              # 267 lines - Comprehensive guide
 │   ├── image_processing.py    # 545 lines - Full implementation
 │   └── outputs/               # Generated visualizations
 │
-├── lab2_cifar10_classifiers/   # ✅ COMPLETE - Executable
+├── lab_02_cifar10_classifiers/   # ✅ COMPLETE - Executable
 │   ├── README.md              # 398 lines - Detailed documentation
 │   ├── cifar10_classifiers.py # 565 lines - KNN, SVM, Neural Net
 │   └── outputs/               # Comparison plots
 │
-├── lab3_batchnorm_dropout/     # ✅ COMPLETE - Executable
+├── lab_03_batchnorm_dropout/     # ✅ COMPLETE - Executable
 │   ├── README.md              # 363 lines - Study guide
 │   ├── batchnorm_dropout_study.py # 565 lines - 4 model variants
 │   └── outputs/               # Training curves
 │
-├── lab4_labeling_tools/        # ✅ COMPLETE - Educational
+├── lab_04_labeling_tools/        # ✅ COMPLETE - Educational
 │   └── README.md              # 467 lines - Tool guide
 │
-├── lab5_segmentation/          # ✅ COMPLETE - Educational
+├── lab_05_segmentation/          # ✅ COMPLETE - Educational
 │   └── README.md              # 95 lines - UNet, SegNet, Mask R-CNN
 │
-├── lab6_object_detection/      # ✅ COMPLETE - Educational
+├── lab_06_object_detection/      # ✅ COMPLETE - Educational
 │   └── README.md              # 192 lines - YOLO, SSD, Faster R-CNN
 │
-├── lab7_image_captioning/      # ✅ COMPLETE - Educational
+├── lab_07_image_captioning/      # ✅ COMPLETE - Educational
 │   └── README.md              # 254 lines - RNN, LSTM, Attention
 │
-├── lab8_chatbot/               # ✅ COMPLETE - Educational
+├── lab_08_chatbot/               # ✅ COMPLETE - Educational
 │   └── README.md              # 346 lines - Bi-directional LSTM
 │
-├── lab9_time_series/           # ✅ COMPLETE - Educational
+├── lab_09_time_series/           # ✅ COMPLETE - Educational
 │   └── README.md              # 398 lines - LSTM forecasting
 │
-└── lab10_seq2seq/              # ✅ COMPLETE - Educational
+└── lab_10_seq2seq/              # ✅ COMPLETE - Educational
     └── README.md              # 476 lines - Seq2Seq, Attention
 ```
 
@@ -178,7 +178,7 @@ cd dl-lab
 pip install -r requirements.txt
 
 # 3. Run a lab
-cd lab1_image_processing
+cd lab_01_image_processing
 python3 image_processing.py
 
 # 4. Or run all labs
