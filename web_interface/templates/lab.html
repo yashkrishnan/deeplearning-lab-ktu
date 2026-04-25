@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lab.name }} - Deep Learning Labs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-muted: #334155;
+            --bg-body: #eef1f6;
+            --bg-card: #ffffff;
+            --bg-muted: #e8edf4;
+            --accent: #5658a0;
+            --accent-2: #7a6a9e;
+            --accent-gradient: #5658a0;
+            --text-primary: #1e2a3a;
+            --text-secondary: #5a6a80;
+            --border: #d0d8e6;
+            --success-bg: rgba(50, 130, 90, 0.1);
+            --success-text: #2a7a58;
+            --warning-bg: rgba(150, 120, 40, 0.1);
+            --warning-text: #7a6010;
+            --error-bg: rgba(150, 60, 60, 0.1);
+            --error-text: #8a3030;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--accent);
+            border: none;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(86, 88, 160, 0.3);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            color: #ffffff;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .back-button {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .back-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+
+        .panel h2 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .control-panel {
+            grid-column: 1 / -1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 11px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9em;
+            margin-left: 15px;
+        }
+
+        .status-idle {
+            background: var(--bg-muted);
+            color: var(--text-secondary);
+        }
+
+        .status-running {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+            animation: pulse 2s infinite;
+        }
+
+        .status-completed {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-failed {
+            background: var(--error-bg);
+            color: var(--error-text);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .output-console {
+            background: #090e1a;
+            color: #cbd5e1;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .output-line {
+            margin-bottom: 5px;
+        }
+
+        .output-error {
+            color: #f87171;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .result-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .result-item:hover {
+            transform: scale(1.02);
+            border-color: var(--accent);
+        }
+
+        .result-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .result-item-info {
+            padding: 10px;
+            background: var(--bg-muted);
+        }
+
+        .result-item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .result-item-size {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--accent);
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-muted);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>{{ lab.name }}</h1>
+                <p>{{ lab.description }}</p>
+            </div>
+            <a href="/" class="back-button">← Back to Labs</a>
+        </header>
+
+        <div class="main-content">
+            <div class="panel control-panel">
+                <h2>
+                    Control Panel
+                    <span class="status-indicator status-idle" id="status-indicator">Idle</span>
+                </h2>
+                <div class="button-group">
+                    <button class="btn-primary" id="run-btn" onclick="runLab()">Run Lab</button>
+                    <button class="btn-danger" id="stop-btn" onclick="stopLab()" disabled>Stop</button>
+                    <button class="btn-primary" onclick="refreshOutputs()">Refresh Outputs</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Console Output</h2>
+                <div class="output-console" id="console-output">
+                    <div class="output-line">Ready to run. Click "Run Lab" to start...</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Generated Results</h2>
+                <div id="results-container">
+                    <div class="empty-state">No results yet. Run the lab to generate outputs.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const labId = '{{ lab_id }}';
+        let statusCheckInterval = null;
+
+        function updateStatus(status) {
+            const indicator = document.getElementById('status-indicator');
+            const runBtn = document.getElementById('run-btn');
+            const stopBtn = document.getElementById('stop-btn');
+
+            indicator.className = 'status-indicator status-' + status;
+            indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+            if (status === 'running') {
+                runBtn.disabled = true;
+                stopBtn.disabled = false;
+            } else {
+                runBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+
+        function appendOutput(lines, isError = false) {
+            const console = document.getElementById('console-output');
+            lines.forEach(line => {
+                const div = document.createElement('div');
+                div.className = 'output-line' + (isError ? ' output-error' : '');
+                div.textContent = line;
+                console.appendChild(div);
+            });
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = 
+                '<div class="output-line">Starting lab execution...</div>';
+        }
+
+        async function runLab() {
+            clearConsole();
+            updateStatus('running');
+
+            try {
+                const response = await fetch(`/api/run/${labId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    appendOutput([data.message]);
+                    startStatusCheck();
+                } else {
+                    appendOutput([`Error: ${data.error}`], true);
+                    updateStatus('failed');
+                }
+            } catch (error) {
+                appendOutput([`Error: ${error.message}`], true);
+                updateStatus('failed');
+            }
+        }
+
+        async function stopLab() {
+            try {
+                const response = await fetch(`/api/stop/${labId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    appendOutput([data.message]);
+                    updateStatus('idle');
+                    stopStatusCheck();
+                }
+            } catch (error) {
+                appendOutput([`Error: ${error.message}`], true);
+            }
+        }
+
+        function startStatusCheck() {
+            if (statusCheckInterval) return;
+            
+            statusCheckInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/status/${labId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'running') {
+                        if (data.stdout && data.stdout.length > 0) {
+                            const currentLines = document.querySelectorAll('.output-line').length;
+                            const newLines = data.stdout.slice(currentLines - 1);
+                            if (newLines.length > 0) {
+                                appendOutput(newLines);
+                            }
+                        }
+                    } else if (data.status === 'completed') {
+                        appendOutput(['', 'Lab execution completed successfully!']);
+                        updateStatus('completed');
+                        stopStatusCheck();
+                        refreshOutputs();
+                    } else if (data.status === 'failed' || data.status === 'error') {
+                        appendOutput(['', 'Lab execution failed!'], true);
+                        if (data.stderr && data.stderr.length > 0) {
+                            appendOutput(data.stderr, true);
+                        }
+                        updateStatus('failed');
+                        stopStatusCheck();
+                    }
+                } catch (error) {
+                    console.error('Status check error:', error);
+                }
+            }, 1000);
+        }
+
+        function stopStatusCheck() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+                statusCheckInterval = null;
+            }
+        }
+
+        async function refreshOutputs() {
+            const container = document.getElementById('results-container');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading results...</div>';
+
+            try {
+                const response = await fetch(`/api/outputs/${labId}`);
+                const data = await response.json();
+
+                if (data.files && data.files.length > 0) {
+                    const imageFiles = data.files.filter(f => 
+                        ['png', 'jpg', 'jpeg'].includes(f.type.toLowerCase())
+                    );
+
+                    if (imageFiles.length > 0) {
+                        container.innerHTML = '<div class="results-grid"></div>';
+                        const grid = container.querySelector('.results-grid');
+
+                        imageFiles.forEach(file => {
+                            const item = document.createElement('div');
+                            item.className = 'result-item';
+                            item.innerHTML = `
+                                <img src="/api/output/${labId}/${file.path}" alt="${file.name}">
+                                <div class="result-item-info">
+                                    <div class="result-item-name">${file.name}</div>
+                                    <div class="result-item-size">${formatFileSize(file.size)}</div>
+                                </div>
+                            `;
+                            grid.appendChild(item);
+                        });
+                    } else {
+                        container.innerHTML = '<div class="empty-state">No image outputs found.</div>';
+                    }
+                } else {
+                    container.innerHTML = '<div class="empty-state">No results yet. Run the lab to generate outputs.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="empty-state">Error loading results: ${error.message}</div>`;
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Load existing outputs on page load
+        refreshOutputs();
+    </script>
+</body>
+</html>

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Learning Labs - Web Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-body: #eef1f6;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-muted: #e8edf4;
+            --accent: #5658a0;
+            --accent-2: #7a6a9e;
+            --accent-gradient: #5658a0;
+            --accent-lite: #8c5c6a;
+            --text-primary: #1e2a3a;
+            --text-secondary: #5a6a80;
+            --border: #d0d8e6;
+            --success-bg: rgba(50, 130, 90, 0.1);
+            --success-text: #2a7a58;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--accent);
+            border: none;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(86, 88, 160, 0.3);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .tab:hover {
+            background: var(--bg-muted);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .labs-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .lab-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .lab-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+        }
+
+        .lab-number {
+            display: inline-block;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: 0.04em;
+        }
+
+        .lab-number.lite {
+            background: var(--accent-lite);
+        }
+
+        .lab-title {
+            font-size: 1.4em;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .lab-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .lab-status {
+            margin-top: 15px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .status-ready {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-running {
+            background: rgba(150, 120, 40, 0.12);
+            color: #7a6010;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-completed {
+            background: rgba(50, 130, 90, 0.12);
+            color: #2a7a58;
+        }
+
+        .status-failed, .status-error {
+            background: rgba(150, 60, 60, 0.12);
+            color: #8a3030;
+        }
+
+        .status-stopped {
+            background: rgba(90, 90, 130, 0.12);
+            color: #4a4a7a;
+        }
+
+        .status-starting {
+            background: rgba(80, 100, 160, 0.12);
+            color: #3a4a8a;
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .panel h2 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .output-warning {
+            color: #fdcb6e;
+            font-weight: bold;
+        }
+
+        .output-console {
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .output-line {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .output-error {
+            color: #ff6b6b;
+        }
+
+        .task-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-stop, .btn-run, .btn-refresh {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-stop {
+            background: #8a3030;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #7a2828;
+        }
+
+        .btn-run {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-run:hover {
+            background: var(--accent-2);
+        }
+
+        .btn-refresh {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-refresh:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .shell-console {
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #00ff00;
+            max-height: 500px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .shell-prompt {
+            color: #00ff00;
+            margin-bottom: 5px;
+        }
+
+        .shell-text {
+            color: #e0e0e0;
+        }
+
+        .shell-output {
+            color: #e0e0e0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .shell-error {
+            color: #ff6b6b;
+        }
+
+        .shell-system {
+            color: #ffeaa7;
+        }
+
+        .lab-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+
+        #docs-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .doc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+        }
+
+        .doc-title {
+            font-size: 1.3em;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .doc-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .doc-icon {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            color: white;
+            font-size: 1.2em;
+            margin-right: 15px;
+            float: left;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .info-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+
+        .info-box h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            list-style-position: inside;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        @media (max-width: 1200px) {
+            .labs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .labs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Deep Learning Labs</h1>
+            <p class="subtitle">Interactive Web Interface for Running and Visualizing Lab Programs</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('full')">Full Labs</button>
+            <button class="tab" onclick="showTab('lite')">Lite Labs</button>
+            <button class="tab" onclick="showTab('docs')">Documentation</button>
+            <button class="tab" onclick="showTab('advanced')">Advanced</button>
+        </div>
+
+        <div id="full-tab" class="tab-content active">
+            <div class="info-box">
+                <h3>Full Lab Programs</h3>
+                <ul>
+                    <li>Complete implementations with full datasets</li>
+                    <li>Comprehensive training and evaluation</li>
+                    <li>Execution time: 2-5 minutes per lab</li>
+                    <li>Best for learning and understanding concepts</li>
+                </ul>
+            </div>
+
+            <div class="labs-grid">
+                {% for lab_id, lab in labs.items() if lab.category == 'full' %}
+                <a href="/lab/{{ lab_id }}" class="lab-card">
+                    <div class="lab-number">{{ lab_id.replace('_', ' ').upper() }}</div>
+                    <div class="lab-title">{{ lab.name }}</div>
+                    <div class="lab-description">{{ lab.description }}</div>
+                    <div class="lab-status status-ready">Ready to Run</div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="lite-tab" class="tab-content">
+            <div class="info-box">
+                <h3>Lightweight Lab Programs</h3>
+                <ul>
+                    <li>All 10 labs available in lightweight versions</li>
+                    <li>2-3x faster execution with reduced datasets</li>
+                    <li>Perfect for quick testing and demonstrations</li>
+                    <li>Execution time: 1-2 minutes per lab</li>
+                    <li>Laptop-friendly with lower resource requirements</li>
+                </ul>
+            </div>
+
+            <div class="labs-grid">
+                {% for lab_id, lab in labs.items() if lab.category == 'lite' %}
+                <a href="/lab/{{ lab_id }}" class="lab-card">
+                    <div class="lab-number lite">{{ lab_id.replace('_', ' ').upper() }}</div>
+                    <div class="lab-title">{{ lab.name }}</div>
+                    <div class="lab-description">{{ lab.description }}</div>
+                    <div class="lab-status status-ready">Ready to Run</div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="docs-tab" class="tab-content">
+            <div class="info-box">
+                <h3>Project Documentation</h3>
+                <ul>
+                    <li>Complete guides and references</li>
+                    <li>Installation and setup instructions</li>
+                    <li>Dataset information and usage</li>
+                    <li>Tips and troubleshooting</li>
+                </ul>
+            </div>
+
+            <div id="docs-list">
+                {% for doc_id, doc in docs.items() %}
+                <div class="doc-card" onclick="viewDoc('{{ doc_id }}')">
+                    <div class="doc-icon">📄</div>
+                    <div class="doc-title">{{ doc.name }}</div>
+                    <div class="doc-description">{{ doc.description }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="advanced-tab" class="tab-content">
+            <div class="info-box">
+                <h3>Advanced Setup & Management</h3>
+                <ul>
+                    <li>Install dependencies and download datasets</li>
+                    <li>Run all labs with one click</li>
+                    <li>Manage project setup from the browser</li>
+                    <li>Monitor execution progress</li>
+                </ul>
+            </div>
+
+            <div class="labs-grid">
+                <div class="lab-card" onclick="viewTaskOutput('install-full')">
+                    <div class="lab-number">SETUP</div>
+                    <div class="lab-title">Install Full Requirements</div>
+                    <div class="lab-description">Install all dependencies from requirements.txt for full lab features</div>
+                    <div class="lab-status" id="status-install-full">Ready</div>
+                    <div class="task-actions" id="actions-install-full" style="display:none;">
+                        <button class="btn-stop" onclick="event.stopPropagation(); stopTask('install-full')">⏹ Stop</button>
+                        <button class="btn-run" onclick="event.stopPropagation(); confirmSetupTask('install-full', 'Install Full Requirements', '5-10 minutes', 'This will install all dependencies from requirements.txt')">▶ Run</button>
+                    </div>
+                </div>
+
+                <div class="lab-card" onclick="viewTaskOutput('install-minimal')">
+                    <div class="lab-number">SETUP</div>
+                    <div class="lab-title">Install Minimal Requirements</div>
+                    <div class="lab-description">Install minimal dependencies from requirements-minimal.txt for lite labs only</div>
+                    <div class="lab-status" id="status-install-minimal">Ready</div>
+                    <div class="task-actions" id="actions-install-minimal" style="display:none;">
+                        <button class="btn-stop" onclick="event.stopPropagation(); stopTask('install-minimal')">⏹ Stop</button>
+                        <button class="btn-run" onclick="event.stopPropagation(); confirmSetupTask('install-minimal', 'Install Minimal Requirements', '2-3 minutes', 'This will install minimal dependencies from requirements-minimal.txt')">▶ Run</button>
+                    </div>
+                </div>
+
+                <div class="lab-card" onclick="viewTaskOutput('download-datasets')">
+                    <div class="lab-number">DATA</div>
+                    <div class="lab-title">Download All Datasets</div>
+                    <div class="lab-description">Download all required datasets (~2GB). This may take several minutes</div>
+                    <div class="lab-status" id="status-download-datasets">Ready</div>
+                    <div class="task-actions" id="actions-download-datasets" style="display:none;">
+                        <button class="btn-stop" onclick="event.stopPropagation(); stopTask('download-datasets')">⏹ Stop</button>
+                        <button class="btn-run" onclick="event.stopPropagation(); confirmSetupTask('download-datasets', 'Download All Datasets', '10-20 minutes', 'This will download ~2GB of data. Ensure you have sufficient disk space and internet connection.')">▶ Run</button>
+                    </div>
+                </div>
+
+                <div class="lab-card" onclick="viewTaskOutput('download-interactive')">
+                    <div class="lab-number">DATA</div>
+                    <div class="lab-title">Interactive Dataset Download</div>
+                    <div class="lab-description">Choose which datasets to download interactively (requires terminal input)</div>
+                    <div class="lab-status" id="status-download-interactive">Ready</div>
+                    <div class="task-actions" id="actions-download-interactive" style="display:none;">
+                        <button class="btn-stop" onclick="event.stopPropagation(); stopTask('download-interactive')">⏹ Stop</button>
+                        <button class="btn-run" onclick="event.stopPropagation(); confirmSetupTask('download-interactive', 'Interactive Dataset Download', 'Varies', 'This will open an interactive prompt. You will need to provide input in the terminal where Flask is running.')">▶ Run</button>
+                    </div>
+                </div>
+
+                <div class="lab-card" onclick="viewTaskOutput('run-all-full')">
+                    <div class="lab-number">RUN</div>
+                    <div class="lab-title">Run All Full Labs</div>
+                    <div class="lab-description">Execute all 10 full labs sequentially (~25-30 minutes)</div>
+                    <div class="lab-status" id="status-run-all-full">Ready</div>
+                    <div class="task-actions" id="actions-run-all-full" style="display:none;">
+                        <button class="btn-stop" onclick="event.stopPropagation(); stopTask('run-all-full')">⏹ Stop</button>
+                        <button class="btn-run" onclick="event.stopPropagation(); confirmSetupTask('run-all-full', 'Run All Full Labs', '25-30 minutes', 'This will execute all 10 full labs sequentially. Ensure all datasets are downloaded first.')">▶ Run</button>
+                    </div>
+                </div>
+
+                <div class="lab-card" onclick="viewTaskOutput('run-all-lite')">
+                    <div class="lab-number lite">RUN</div>
+                    <div class="lab-title">Run All Lite Labs</div>
+                    <div class="lab-description">Execute all 10 lightweight labs sequentially (~10-15 minutes)</div>
+                    <div class="lab-status" id="status-run-all-lite">Ready</div>
+                    <div class="task-actions" id="actions-run-all-lite" style="display:none;">
+                        <button class="btn-stop" onclick="event.stopPropagation(); stopTask('run-all-lite')">⏹ Stop</button>
+                        <button class="btn-run" onclick="event.stopPropagation(); confirmSetupTask('run-all-lite', 'Run All Lite Labs', '10-15 minutes', 'This will execute all 10 lightweight labs sequentially. Ensure datasets are downloaded first.')">▶ Run</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 id="output-title">Task Output</h2>
+                    <button class="btn-refresh" onclick="refreshOutput()">🔄 Refresh</button>
+                </div>
+                <div class="shell-console" id="advanced-console">
+                    <div class="shell-prompt">$ <span class="shell-text">Click a task card to view its output...</span></div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Deep Learning Labs - Educational Project</p>
+            <p>Built with Flask and Python</p>
+        </footer>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            localStorage.setItem('activeTab', tabName);
+            if (tabName === 'advanced') {
+                startStatusPolling();
+            } else {
+                stopStatusPolling();
+            }
+        }
+
+        function viewDoc(docId) {
+            window.open('/docs#' + docId, '_blank');
+        }
+
+        let currentTaskId = null;
+        let outputInterval = null;
+        let statusInterval = null;
+
+        // ── Status polling ────────────────────────────────────────────
+        function loadTaskStatuses() {
+            fetch('/api/setup/statuses')
+                .then(r => r.json())
+                .then(data => {
+                    Object.keys(data).forEach(taskId => {
+                        const statusEl  = document.getElementById('status-'  + taskId);
+                        const actionsEl = document.getElementById('actions-' + taskId);
+                        if (!statusEl) return;
+                        const s = data[taskId].status;
+                        statusEl.textContent = s;
+                        statusEl.className   = 'lab-status status-' + s.toLowerCase();
+                        if (actionsEl) {
+                            actionsEl.style.display = 'flex';
+                            const stopBtn = actionsEl.querySelector('.btn-stop');
+                            const runBtn  = actionsEl.querySelector('.btn-run');
+                            if (s === 'Running') {
+                                stopBtn.style.display = 'inline-block';
+                                runBtn.style.display  = 'none';
+                            } else {
+                                stopBtn.style.display = 'none';
+                                runBtn.style.display  = 'inline-block';
+                            }
+                        }
+                    });
+                })
+                .catch(err => console.error('Status poll error:', err));
+        }
+
+        function startStatusPolling() {
+            if (statusInterval) return;
+            loadTaskStatuses();
+            statusInterval = setInterval(loadTaskStatuses, 3000);
+        }
+
+        function stopStatusPolling() {
+            clearInterval(statusInterval);
+            statusInterval = null;
+        }
+
+        // ── Output display ────────────────────────────────────────────
+        function viewTaskOutput(taskId) {
+            document.querySelectorAll('.lab-card').forEach(c => c.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            currentTaskId = taskId;
+            document.getElementById('output-title').textContent = 'Output: ' + taskId;
+            refreshOutput();
+            clearInterval(outputInterval);
+            outputInterval = setInterval(refreshOutput, 2000);
+        }
+
+        function refreshOutput() {
+            if (!currentTaskId) return;
+            fetch('/api/setup/' + currentTaskId + '/output')
+                .then(r => r.json())
+                .then(data => {
+                    const el = document.getElementById('advanced-console');
+                    if (!data.output || data.output.length === 0) {
+                        el.innerHTML = '<div class="shell-prompt">$ <span class="shell-text">No output yet — click Run to start.</span></div>';
+                        return;
+                    }
+                    let html = '<div class="shell-prompt">$ <span class="shell-text">' + escapeHtml(currentTaskId) + '</span></div>';
+                    data.output.forEach(line => {
+                        if      (line.startsWith('[OUT]'))    html += '<div class="shell-output">'  + escapeHtml(line.slice(6))  + '</div>';
+                        else if (line.startsWith('[ERR]'))    html += '<div class="shell-error">'   + escapeHtml(line.slice(6))  + '</div>';
+                        else if (line.startsWith('[SYSTEM]')) html += '<div class="shell-system">'  + escapeHtml(line.slice(9))  + '</div>';
+                        else if (line.startsWith('[ERROR]'))  html += '<div class="shell-error">'   + escapeHtml(line.slice(8))  + '</div>';
+                        else                                   html += '<div class="shell-output">'  + escapeHtml(line)           + '</div>';
+                    });
+                    el.innerHTML = html;
+                    el.scrollTop = el.scrollHeight;
+                })
+                .catch(err => console.error('Output fetch error:', err));
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // ── Task control ──────────────────────────────────────────────
+        function confirmSetupTask(taskId, taskName, duration, warning) {
+            if (confirm(`Task: ${taskName}\n\nEstimated Duration: ${duration}\n\n${warning}\n\nProceed?`)) {
+                runSetupTask(taskId);
+            }
+        }
+
+        async function runSetupTask(taskId) {
+            const statusEl = document.getElementById('status-' + taskId);
+            if (statusEl) {
+                statusEl.textContent = 'Starting…';
+                statusEl.className = 'lab-status status-starting';
+            }
+            try {
+                const res  = await fetch('/api/setup/' + taskId, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    if (statusEl) {
+                        statusEl.textContent = 'Running';
+                        statusEl.className   = 'lab-status status-running';
+                    }
+                    // Switch to viewing this task's output
+                    document.querySelectorAll('.lab-card').forEach(c => c.classList.remove('selected'));
+                    const card = document.querySelector(`[onclick="viewTaskOutput('${taskId}')"]`);
+                    if (card) card.classList.add('selected');
+                    currentTaskId = taskId;
+                    document.getElementById('output-title').textContent = 'Output: ' + taskId;
+                    clearInterval(outputInterval);
+                    outputInterval = setInterval(refreshOutput, 2000);
+                    refreshOutput();
+                    if (data.interactive) {
+                        alert('⚠️ INTERACTIVE TASK\n\nThis task requires terminal input.\nCheck your terminal and provide input as needed.');
+                    }
+                } else {
+                    if (statusEl) { statusEl.textContent = 'Error'; statusEl.className = 'lab-status status-error'; }
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                if (statusEl) { statusEl.textContent = 'Error'; statusEl.className = 'lab-status status-error'; }
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function stopTask(taskId) {
+            if (!confirm('Stop this task?')) return;
+            try {
+                const res  = await fetch('/api/setup/' + taskId + '/stop', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    loadTaskStatuses();
+                    if (currentTaskId === taskId) refreshOutput();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Load statuses when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            loadTaskStatuses();
+        });
+
+        (function restoreTab() {
+            const saved = localStorage.getItem('activeTab');
+            if (!saved) return;
+            const tabEl     = document.querySelector(`.tab[onclick="showTab('${saved}')"]`);
+            const contentEl = document.getElementById(saved + '-tab');
+            if (!tabEl || !contentEl) return;
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            contentEl.classList.add('active');
+            tabEl.classList.add('active');
+            if (saved === 'advanced') startStatusPolling();
+        })();
+    </script>
+</body>
+</html>

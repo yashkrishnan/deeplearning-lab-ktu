@@ -47,6 +47,8 @@ checkpoints/
 runs/
 wandb/
 mlruns/
+**/outputs/
+**/outputs_lite/
 
 # IDE
 .vscode/
