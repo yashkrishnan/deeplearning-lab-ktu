@@ -207,12 +207,179 @@ DOCS_CONFIG = {
     }
 }
 
+# ── Dataset requirements ──────────────────────────────────────────────────────
+# check_type: 'file_exists' | 'dir_not_empty'
+DATASET_REQUIREMENTS = {
+    # Full labs
+    'lab_01': {
+        'check': 'labs_full/lab_01_image_processing/data/sample_images',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'ashishjangra27/face-mask-12k-images-dataset',
+        'download_to': 'labs_full/lab_01_image_processing/data/sample_images',
+        'size': '~1 GB',
+    },
+    'lab_02': {
+        'check': 'labs_full/lab_02_cifar10_classifiers/data/cifar-10-batches-py',
+        'check_type': 'dir_not_empty',
+        'auto': True,
+        'auto_note': 'CIFAR-10 downloads automatically when the lab runs',
+    },
+    'lab_03': {
+        'check': 'labs_full/lab_03_batchnorm_dropout/data/cifar-10-batches-py',
+        'check_type': 'dir_not_empty',
+        'auto': True,
+        'auto_note': 'CIFAR-10 downloads automatically when the lab runs',
+    },
+    'lab_04': {
+        'check': 'labs_full/lab_04_labeling_tools/data/practice_images',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'andrewmvd/road-sign-detection',
+        'download_to': 'labs_full/lab_04_labeling_tools/data/practice_images',
+        'size': '~100 MB',
+    },
+    'lab_05': {
+        'check': 'labs_full/lab_05_segmentation/data/pets',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'tanlikesmath/the-oxfordiiit-pet-dataset',
+        'download_to': 'labs_full/lab_05_segmentation/data/pets',
+        'size': '~800 MB',
+    },
+    'lab_06': {
+        'check': 'labs_full/lab_06_object_detection/data/voc',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'huanghanchina/pascal-voc-2012',
+        'download_to': 'labs_full/lab_06_object_detection/data/voc',
+        'size': '~3.6 GB',
+    },
+    'lab_07': {
+        'check': 'labs_full/lab_07_image_captioning/data/flickr8k/captions.txt',
+        'check_type': 'file_exists',
+        'kaggle': 'adityajn105/flickr8k',
+        'download_to': 'labs_full/lab_07_image_captioning/data/flickr8k',
+        'size': '~1 GB',
+    },
+    'lab_08': {
+        'check': 'labs_full/lab_08_chatbot/data/cornell',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'rajathmc/cornell-moviedialog-corpus',
+        'download_to': 'labs_full/lab_08_chatbot/data/cornell',
+        'size': '~10 MB',
+    },
+    'lab_09': {
+        'check': 'labs_full/lab_09_time_series/data/energy',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'robikscube/hourly-energy-consumption',
+        'download_to': 'labs_full/lab_09_time_series/data/energy',
+        'size': '~50 MB',
+    },
+    'lab_10': {
+        'check': 'labs_full/lab_10_seq2seq/data/translation/en-fr.csv',
+        'check_type': 'file_exists',
+        'kaggle': 'dhruvildave/en-fr-translation-dataset',
+        'download_to': 'labs_full/lab_10_seq2seq/data/translation',
+        'size': '~50 MB',
+    },
+    # Lite labs
+    'lab_01_lite': {
+        'check': 'labs_lite/lab_01_image_processing/data/sample_images',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'ashishjangra27/face-mask-12k-images-dataset',
+        'download_to': 'labs_lite/lab_01_image_processing/data/sample_images',
+        'size': '~1 GB',
+    },
+    'lab_02_lite': {
+        'check': 'labs_lite/lab_02_cifar10_classifiers/data/cifar-10-batches-py',
+        'check_type': 'dir_not_empty',
+        'auto': True,
+        'auto_note': 'CIFAR-10 downloads automatically when the lab runs',
+    },
+    'lab_03_lite': {
+        'check': 'labs_lite/lab_03_batchnorm_dropout/data/cifar-10-batches-py',
+        'check_type': 'dir_not_empty',
+        'auto': True,
+        'auto_note': 'CIFAR-10 downloads automatically when the lab runs',
+    },
+    'lab_04_lite': {
+        'check': 'labs_lite/lab_04_labeling_tools/data/practice_images',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'andrewmvd/road-sign-detection',
+        'download_to': 'labs_lite/lab_04_labeling_tools/data/practice_images',
+        'size': '~100 MB',
+    },
+    'lab_05_lite': {
+        'check': 'labs_lite/lab_05_segmentation/data/pets',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'tanlikesmath/the-oxfordiiit-pet-dataset',
+        'download_to': 'labs_lite/lab_05_segmentation/data/pets',
+        'size': '~800 MB',
+    },
+    'lab_06_lite': {
+        'check': 'labs_lite/lab_06_object_detection/data/voc',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'huanghanchina/pascal-voc-2012',
+        'download_to': 'labs_lite/lab_06_object_detection/data/voc',
+        'size': '~3.6 GB',
+    },
+    'lab_07_lite': {
+        'check': 'labs_lite/lab_07_image_captioning/data/flickr8k/captions.txt',
+        'check_type': 'file_exists',
+        'kaggle': 'adityajn105/flickr8k',
+        'download_to': 'labs_lite/lab_07_image_captioning/data/flickr8k',
+        'size': '~1 GB',
+    },
+    'lab_08_lite': {
+        'check': 'labs_lite/lab_08_chatbot/data/cornell',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'rajathmc/cornell-moviedialog-corpus',
+        'download_to': 'labs_lite/lab_08_chatbot/data/cornell',
+        'size': '~10 MB',
+    },
+    'lab_09_lite': {
+        'check': 'labs_lite/lab_09_time_series/data/energy',
+        'check_type': 'dir_not_empty',
+        'kaggle': 'robikscube/hourly-energy-consumption',
+        'download_to': 'labs_lite/lab_09_time_series/data/energy',
+        'size': '~50 MB',
+    },
+    'lab_10_lite': {
+        'check': 'labs_lite/lab_10_seq2seq/data/translation/en-fr.csv',
+        'check_type': 'file_exists',
+        'kaggle': 'dhruvildave/en-fr-translation-dataset',
+        'download_to': 'labs_lite/lab_10_seq2seq/data/translation',
+        'size': '~50 MB',
+    },
+}
+
+_IGNORE_NAMES = {'.DS_Store', '.gitkeep', '.gitignore', 'Thumbs.db'}
+
+
+def check_dataset_ready(lab_id):
+    """Return (ready: bool, auto: bool)."""
+    req = DATASET_REQUIREMENTS.get(lab_id)
+    if not req:
+        return False, False
+    auto = req.get('auto', False)
+    path = BASE_DIR / req['check']
+    if req['check_type'] == 'file_exists':
+        ready = path.is_file()
+    else:  # dir_not_empty
+        ready = (
+            path.is_dir()
+            and any(f.name not in _IGNORE_NAMES for f in path.iterdir())
+        )
+    return ready, auto
+
+
+# ── In-memory process state ───────────────────────────────────────────────────
 # Store running processes
 running_processes = {}
 process_outputs = {}
 setup_task_statuses = {}
 setup_task_processes = {}
 setup_task_outputs = {}
+download_statuses = {}    # lab_id → {status, start_time, ...}
+download_outputs = {}     # lab_id → [lines]
+download_processes = {}   # lab_id → subprocess.Popen
 
 @app.route('/')
 def index():
@@ -398,12 +565,12 @@ def run_setup_task(task_id):
             'interactive': True
         },
         'run-all-full': {
-            'command': 'bash run_all_labs.sh',
+            'command': 'bash labs_full/run_all_labs.sh',
             'description': 'Running all full labs',
             'interactive': False
         },
         'run-all-lite': {
-            'command': 'bash labs_lite/run_lite_labs.sh',
+            'command': 'bash labs_lite/run_all_labs.sh',
             'description': 'Running all lite labs',
             'interactive': False
         }
@@ -554,6 +721,121 @@ def stop_task(task_id):
         return jsonify({'message': 'Task stopped successfully'})
     
     return jsonify({'error': 'Task already completed'}), 400
+
+@app.route('/api/dataset-status')
+def get_all_dataset_statuses():
+    """Return dataset readiness for every lab."""
+    result = {}
+    for lab_id in LABS_CONFIG:
+        ready, auto = check_dataset_ready(lab_id)
+        req = DATASET_REQUIREMENTS.get(lab_id, {})
+        dl_status = download_statuses.get(lab_id, {}).get('status', 'idle')
+        result[lab_id] = {
+            'ready': ready,
+            'auto': auto,
+            'auto_note': req.get('auto_note', ''),
+            'size': req.get('size', ''),
+            'downloading': dl_status == 'Running',
+            'download_status': dl_status,
+        }
+    return jsonify(result)
+
+
+@app.route('/api/download/<lab_id>', methods=['POST'])
+def download_dataset(lab_id):
+    """Kick off a Kaggle download for a single lab (non-blocking)."""
+    if lab_id not in LABS_CONFIG:
+        return jsonify({'error': 'Lab not found'}), 404
+
+    req = DATASET_REQUIREMENTS.get(lab_id)
+    if not req:
+        return jsonify({'error': 'No dataset config for this lab'}), 400
+    if req.get('auto'):
+        return jsonify({'error': 'Dataset auto-downloads when the lab runs'}), 400
+
+    # Prevent parallel download of the same lab
+    if download_statuses.get(lab_id, {}).get('status') == 'Running':
+        return jsonify({'error': 'Download already in progress'}), 400
+
+    # Already have the data
+    ready, _ = check_dataset_ready(lab_id)
+    if ready:
+        return jsonify({'error': 'Dataset already available'}), 400
+
+    dest = BASE_DIR / req['download_to']
+    dest.mkdir(parents=True, exist_ok=True)
+
+    download_statuses[lab_id] = {'status': 'Running', 'start_time': datetime.now().isoformat()}
+    download_outputs[lab_id] = []
+
+    def run_download():
+        try:
+            cmd = f'kaggle datasets download "{req["kaggle"]}" -p "{dest}" --unzip'
+            process = subprocess.Popen(
+                cmd, shell=True, cwd=str(BASE_DIR),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, bufsize=1
+            )
+            download_processes[lab_id] = process
+            download_outputs[lab_id].append(
+                f'[SYSTEM] Downloading {req["kaggle"]} ({req.get("size", "")})…'
+            )
+
+            def read_stream(stream, prefix):
+                for line in stream:
+                    line = line.rstrip('\n')
+                    if line:
+                        download_outputs[lab_id].append(f'[{prefix}] {line}')
+
+            t_out = threading.Thread(target=read_stream, args=(process.stdout, 'OUT'), daemon=True)
+            t_err = threading.Thread(target=read_stream, args=(process.stderr, 'ERR'), daemon=True)
+            t_out.start(); t_err.start()
+            t_out.join(); t_err.join()
+            process.wait()
+
+            if download_statuses[lab_id]['status'] == 'Stopped':
+                pass
+            elif process.returncode == 0:
+                download_statuses[lab_id]['status'] = 'Completed'
+                download_outputs[lab_id].append('[SYSTEM] Dataset downloaded successfully')
+            else:
+                download_statuses[lab_id]['status'] = 'Failed'
+                download_outputs[lab_id].append(
+                    f'[SYSTEM] Download failed (exit code {process.returncode})'
+                )
+            download_statuses[lab_id]['end_time'] = datetime.now().isoformat()
+        except Exception as e:
+            download_statuses[lab_id]['status'] = 'Error'
+            download_outputs[lab_id].append(f'[ERROR] {e}')
+
+    threading.Thread(target=run_download, daemon=True).start()
+    return jsonify({'message': 'Download started', 'lab_id': lab_id})
+
+
+@app.route('/api/download/<lab_id>/output')
+def get_download_output(lab_id):
+    """Real-time output lines for an in-progress download."""
+    if lab_id not in LABS_CONFIG:
+        return jsonify({'error': 'Lab not found'}), 404
+    ready, auto = check_dataset_ready(lab_id)
+    return jsonify({
+        'output': download_outputs.get(lab_id, []),
+        'status': download_statuses.get(lab_id, {}).get('status', 'idle'),
+        'ready': ready,
+    })
+
+
+@app.route('/api/download/<lab_id>/stop', methods=['POST'])
+def stop_download(lab_id):
+    """Cancel a running download."""
+    proc = download_processes.get(lab_id)
+    if not proc or proc.poll() is not None:
+        return jsonify({'error': 'No active download for this lab'}), 400
+    proc.terminate()
+    download_statuses[lab_id]['status'] = 'Stopped'
+    download_outputs[lab_id].append('[SYSTEM] Download cancelled by user')
+    return jsonify({'message': 'Download stopped'})
+
 
 if __name__ == '__main__':
     print("=" * 60)

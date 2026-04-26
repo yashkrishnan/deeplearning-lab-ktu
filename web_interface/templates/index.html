@@ -114,19 +114,22 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            cursor: pointer;
-            text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         .lab-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 8px 28px rgba(86, 88, 160, 0.15);
             border-color: var(--accent);
+        }
+
+        .lab-card-body {
+            flex: 1;
         }
 
         .lab-number {
@@ -137,7 +140,7 @@
             border-radius: 20px;
             font-size: 0.85em;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             letter-spacing: 0.04em;
         }
 
@@ -146,16 +149,113 @@
         }
 
         .lab-title {
-            font-size: 1.4em;
+            font-size: 1.15em;
             color: var(--text-primary);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
         .lab-description {
             color: var(--text-secondary);
-            line-height: 1.6;
-            font-size: 0.95em;
+            line-height: 1.5;
+            font-size: 0.88em;
+        }
+
+        /* ── Dataset status footer ── */
+        .lab-card-footer {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dataset-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        .dataset-badge.ready {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .dataset-badge.missing {
+            background: rgba(150, 60, 60, 0.1);
+            color: #8a3030;
+        }
+
+        .dataset-badge.downloading {
+            background: rgba(150, 120, 40, 0.1);
+            color: #7a6010;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .dataset-badge.auto {
+            background: rgba(80, 100, 160, 0.1);
+            color: #3a4a8a;
+        }
+
+        .lab-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-dl {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            background: var(--bg-muted);
+            color: var(--text-primary);
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            text-align: center;
+        }
+
+        .btn-dl:hover:not(:disabled) {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .btn-dl:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-run-lab {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: 7px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.82em;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: opacity 0.2s;
+            pointer-events: auto;
+        }
+
+        .btn-run-lab:hover {
+            opacity: 0.88;
+        }
+
+        .btn-run-lab.disabled {
+            background: var(--bg-muted);
+            color: var(--text-secondary);
+            pointer-events: none;
+            cursor: not-allowed;
         }
 
         .lab-status {
@@ -456,12 +556,24 @@
 
             <div class="labs-grid">
                 {% for lab_id, lab in labs.items() if lab.category == 'full' %}
-                <a href="/lab/{{ lab_id }}" class="lab-card">
-                    <div class="lab-number">{{ lab_id.replace('_', ' ').upper() }}</div>
-                    <div class="lab-title">{{ lab.name }}</div>
-                    <div class="lab-description">{{ lab.description }}</div>
-                    <div class="lab-status status-ready">Ready to Run</div>
-                </a>
+                <div class="lab-card" id="card-{{ lab_id }}">
+                    <div class="lab-card-body">
+                        <div class="lab-number">{{ lab_id.replace('_', ' ').upper() }}</div>
+                        <div class="lab-title">{{ lab.name }}</div>
+                        <div class="lab-description">{{ lab.description }}</div>
+                    </div>
+                    <div class="lab-card-footer">
+                        <span class="dataset-badge" id="ds-badge-{{ lab_id }}">⟳ Checking…</span>
+                        <div class="lab-card-actions">
+                            <button class="btn-dl" id="dl-btn-{{ lab_id }}"
+                                    onclick="downloadDataset(event, '{{ lab_id }}')" disabled>
+                                ↓ Dataset
+                            </button>
+                            <a class="btn-run-lab disabled" id="run-btn-{{ lab_id }}"
+                               href="/lab/{{ lab_id }}">▶ Run</a>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -480,12 +592,24 @@
 
             <div class="labs-grid">
                 {% for lab_id, lab in labs.items() if lab.category == 'lite' %}
-                <a href="/lab/{{ lab_id }}" class="lab-card">
-                    <div class="lab-number lite">{{ lab_id.replace('_', ' ').upper() }}</div>
-                    <div class="lab-title">{{ lab.name }}</div>
-                    <div class="lab-description">{{ lab.description }}</div>
-                    <div class="lab-status status-ready">Ready to Run</div>
-                </a>
+                <div class="lab-card" id="card-{{ lab_id }}">
+                    <div class="lab-card-body">
+                        <div class="lab-number lite">{{ lab_id.replace('_', ' ').upper() }}</div>
+                        <div class="lab-title">{{ lab.name }}</div>
+                        <div class="lab-description">{{ lab.description }}</div>
+                    </div>
+                    <div class="lab-card-footer">
+                        <span class="dataset-badge" id="ds-badge-{{ lab_id }}">⟳ Checking…</span>
+                        <div class="lab-card-actions">
+                            <button class="btn-dl" id="dl-btn-{{ lab_id }}"
+                                    onclick="downloadDataset(event, '{{ lab_id }}')" disabled>
+                                ↓ Dataset
+                            </button>
+                            <a class="btn-run-lab disabled" id="run-btn-{{ lab_id }}"
+                               href="/lab/{{ lab_id }}">▶ Run</a>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -770,8 +894,89 @@
             }
         }
 
-        // Load statuses when page loads
+        // ── Dataset status ────────────────────────────────────────────
+        let datasetPollInterval = null;
+        let pendingDownloads = new Set();  // lab_ids currently downloading
+
+        function applyDatasetStatus(labId, info) {
+            const badge  = document.getElementById('ds-badge-' + labId);
+            const dlBtn  = document.getElementById('dl-btn-'  + labId);
+            const runBtn = document.getElementById('run-btn-' + labId);
+            if (!badge || !dlBtn || !runBtn) return;
+
+            if (info.ready) {
+                badge.className   = 'dataset-badge ready';
+                badge.textContent = '✓ Data Ready';
+                dlBtn.disabled    = true;
+                dlBtn.textContent = '✓ Downloaded';
+                runBtn.classList.remove('disabled');
+                pendingDownloads.delete(labId);
+            } else if (info.auto) {
+                badge.className   = 'dataset-badge auto';
+                badge.textContent = '⟳ Auto on Run';
+                dlBtn.disabled    = true;
+                dlBtn.textContent = 'Auto';
+                runBtn.classList.remove('disabled');
+            } else if (info.downloading) {
+                badge.className   = 'dataset-badge downloading';
+                badge.textContent = '⬇ Downloading…';
+                dlBtn.disabled    = true;
+                dlBtn.textContent = '⬇ Downloading…';
+                runBtn.classList.add('disabled');
+                pendingDownloads.add(labId);
+            } else {
+                badge.className   = 'dataset-badge missing';
+                badge.textContent = '✗ No Data' + (info.size ? ' (' + info.size + ')' : '');
+                dlBtn.disabled    = false;
+                dlBtn.textContent = '↓ Dataset';
+                runBtn.classList.add('disabled');
+            }
+        }
+
+        function fetchDatasetStatuses() {
+            fetch('/api/dataset-status')
+                .then(r => r.json())
+                .then(data => {
+                    Object.entries(data).forEach(([labId, info]) => applyDatasetStatus(labId, info));
+                    // Keep polling only while downloads are active
+                    if (pendingDownloads.size === 0) {
+                        clearInterval(datasetPollInterval);
+                        datasetPollInterval = null;
+                    }
+                })
+                .catch(err => console.error('Dataset status error:', err));
+        }
+
+        function downloadDataset(event, labId) {
+            event.stopPropagation();
+            const dlBtn = document.getElementById('dl-btn-' + labId);
+            dlBtn.disabled = true;
+            dlBtn.textContent = '⬇ Starting…';
+
+            fetch('/api/download/' + labId, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Download error: ' + data.error);
+                        fetchDatasetStatuses();
+                    } else {
+                        pendingDownloads.add(labId);
+                        // Start polling if not already
+                        if (!datasetPollInterval) {
+                            datasetPollInterval = setInterval(fetchDatasetStatuses, 3000);
+                        }
+                        fetchDatasetStatuses();
+                    }
+                })
+                .catch(err => {
+                    alert('Error: ' + err.message);
+                    fetchDatasetStatuses();
+                });
+        }
+
+        // Initial dataset check on page load
         window.addEventListener('DOMContentLoaded', function() {
+            fetchDatasetStatuses();
             loadTaskStatuses();
         });
 
