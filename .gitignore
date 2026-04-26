@@ -41,17 +41,8 @@ lightning_logs/
 # TensorFlow
 tensorboard/
 
-# Large dataset zips — download via Kaggle (web interface Download button)
-labs_full/lab_01_image_processing/data/sample_images/face-mask-12k-images-dataset.zip
-labs_lite/lab_01_image_processing/data/sample_images/face-mask-12k-images-dataset.zip
-labs_full/lab_05_segmentation/data/pets/the-oxfordiiit-pet-dataset.zip
-labs_full/lab_06_object_detection/data/voc/pascal-voc-2012.zip
-labs_full/lab_07_image_captioning/data/flickr8k/flickr8k.zip
-labs_full/lab_10_seq2seq/data/translation/en-fr-translation-dataset.zip
-labs_lite/lab_05_segmentation/data/pets/the-oxfordiiit-pet-dataset.zip
-labs_lite/lab_06_object_detection/data/voc/pascal-voc-2012.zip
-labs_lite/lab_07_image_captioning/data/flickr8k/flickr8k.zip
-labs_lite/lab_10_seq2seq/data/translation/en-fr-translation-dataset.zip
+# All dataset zips — download via Kaggle (web interface Download button)
+**/*.zip
 
 # Output directories
 logs/
