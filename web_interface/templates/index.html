@@ -439,6 +439,13 @@
             margin-top: 20px;
         }
 
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
         .doc-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -515,7 +522,8 @@
         }
 
         @media (max-width: 768px) {
-            .labs-grid {
+            .labs-grid,
+            .tasks-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -647,7 +655,7 @@
                 </ul>
             </div>
 
-            <div class="labs-grid">
+            <div class="tasks-grid">
                 <div class="lab-card" onclick="viewTaskOutput('install-full')">
                     <div class="lab-number">SETUP</div>
                     <div class="lab-title">Install Full Requirements</div>
