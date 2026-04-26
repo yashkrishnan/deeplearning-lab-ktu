@@ -41,10 +41,14 @@ lightning_logs/
 # TensorFlow
 tensorboard/
 
-# Oversized dataset zips (>2 GB — exceed GitHub LFS limit, download via Kaggle)
+# Dataset zips >500 MB — exceed GitHub LFS limit, download via Kaggle
+labs_full/lab_05_segmentation/data/pets/the-oxfordiiit-pet-dataset.zip
 labs_full/lab_06_object_detection/data/voc/pascal-voc-2012.zip
+labs_full/lab_07_image_captioning/data/flickr8k/flickr8k.zip
 labs_full/lab_10_seq2seq/data/translation/en-fr-translation-dataset.zip
+labs_lite/lab_05_segmentation/data/pets/the-oxfordiiit-pet-dataset.zip
 labs_lite/lab_06_object_detection/data/voc/pascal-voc-2012.zip
+labs_lite/lab_07_image_captioning/data/flickr8k/flickr8k.zip
 labs_lite/lab_10_seq2seq/data/translation/en-fr-translation-dataset.zip
 
 # Output directories
