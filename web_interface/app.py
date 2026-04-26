@@ -171,9 +171,9 @@ DOCS_CONFIG = {
         'description': 'Complete project documentation and overview'
     },
     'quick_setup': {
-        'name': 'Quick Setup Guide',
-        'file': 'docs/QUICK_SETUP.md',
-        'description': 'Complete setup: installation, datasets, running labs'
+        'name': 'Dataset Setup Guide',
+        'file': 'docs/DATASET_SETUP_GUIDE.md',
+        'description': 'Step-by-step guide for downloading and setting up datasets'
     },
     'installation': {
         'name': 'Installation Guide',
@@ -192,7 +192,7 @@ DOCS_CONFIG = {
     },
     'lightweight_labs': {
         'name': 'Lightweight Labs',
-        'file': 'docs/LIGHTWEIGHT_LABS_README.md',
+        'file': 'labs_lite/README.md',
         'description': 'Guide to faster, lightweight lab versions'
     },
     'web_interface': {
