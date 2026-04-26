@@ -1,4 +1,4 @@
-i<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,9 +12,6 @@ i<!DOCTYPE html>
         }
 
         :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --bg-muted: #334155;
             --bg-body: #eef1f6;
             --bg-card: #ffffff;
             --bg-muted: #e8edf4;
@@ -191,7 +188,7 @@ i<!DOCTYPE html>
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
-            color: #a78bfa;
+            color: #5658a0;
         }
 
         .markdown-content pre {
@@ -283,7 +280,7 @@ i<!DOCTYPE html>
             <div class="sidebar">
                 <h2>Documents</h2>
                 {% for doc_id, doc in docs.items() %}
-                <div class="doc-item" onclick="loadDoc('{{ doc_id }}')">
+                <div class="doc-item" data-doc-id="{{ doc_id }}" onclick="loadDoc('{{ doc_id }}', this)">
                     <div class="doc-item-title">{{ doc.name }}</div>
                     <div class="doc-item-desc">{{ doc.description }}</div>
                 </div>
@@ -305,16 +302,19 @@ i<!DOCTYPE html>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
     <script>
-        async function loadDoc(docId) {
+        // Configure marked for safe, clean output
+        marked.setOptions({ breaks: true, gfm: true });
+
+        async function loadDoc(docId, triggerEl) {
             const contentDiv = document.getElementById('doc-content');
             contentDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Loading document...</div>';
 
             // Update active state
-            document.querySelectorAll('.doc-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.doc-item').classList.add('active');
+            document.querySelectorAll('.doc-item').forEach(item => item.classList.remove('active'));
+            const item = triggerEl ? triggerEl.closest('.doc-item') : document.querySelector(`[data-doc-id="${docId}"]`);
+            if (item) item.classList.add('active');
 
             try {
                 const response = await fetch(`/api/doc/${docId}`);
@@ -323,7 +323,7 @@ i<!DOCTYPE html>
                 if (response.ok) {
                     contentDiv.innerHTML = `
                         <h1>${data.name}</h1>
-                        <div class="markdown-content">${formatMarkdown(data.content)}</div>
+                        <div class="markdown-content">${marked.parse(data.content)}</div>
                     `;
                 } else {
                     contentDiv.innerHTML = `
@@ -339,60 +339,10 @@ i<!DOCTYPE html>
             }
         }
 
-        function formatMarkdown(content) {
-            // Simple markdown formatting (basic implementation)
-            let html = content;
-
-            // Escape HTML
-            html = html.replace(/&/g, '&')
-                      .replace(/</g, '<')
-                      .replace(/>/g, '>');
-
-            // Code blocks
-            html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-
-            // Inline code
-            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-            // Headers
-            html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-            html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-            html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-
-            // Bold
-            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-            // Italic
-            html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
-            // Links
-            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-            // Lists
-            html = html.replace(/^\* (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-
-            // Paragraphs
-            html = html.split('\n\n').map(para => {
-                if (!para.match(/^<[hup]/)) {
-                    return '<p>' + para + '</p>';
-                }
-                return para;
-            }).join('\n');
-
-            return html;
-        }
-
-        // Check for hash in URL
+        // Load doc from URL hash on page load
         window.addEventListener('load', () => {
             const hash = window.location.hash.substring(1);
-            if (hash) {
-                const docItem = document.querySelector(`[onclick="loadDoc('${hash}')"]`);
-                if (docItem) {
-                    docItem.click();
-                }
-            }
+            if (hash) loadDoc(hash);
         });
     </script>
 </body>
