@@ -129,35 +129,35 @@ LABS_CONFIG = {
     },
     'lab_06_lite': {
         'name': 'Object Detection',
-        'script': 'labs_lite/lab_06_object_detection/object_detection_demo_lite.py',
+        'script': 'labs_lite/lab_06_object_detection/object_detection_lite.py',
         'output_dir': 'labs_lite/lab_06_object_detection/output',
         'description': 'Fast YOLO-style detector',
         'category': 'lite'
     },
     'lab_07_lite': {
         'name': 'Image Captioning',
-        'script': 'labs_lite/lab_07_image_captioning/image_captioning_demo_lite.py',
+        'script': 'labs_lite/lab_07_image_captioning/image_captioning_lite.py',
         'output_dir': 'labs_lite/lab_07_image_captioning/output',
         'description': 'Quick RNN/LSTM captioning',
         'category': 'lite'
     },
     'lab_08_lite': {
         'name': 'Chatbot',
-        'script': 'labs_lite/lab_08_chatbot/chatbot_demo_lite.py',
+        'script': 'labs_lite/lab_08_chatbot/chatbot_lite.py',
         'output_dir': 'labs_lite/lab_08_chatbot/output',
         'description': 'Fast BiLSTM chatbot',
         'category': 'lite'
     },
     'lab_09_lite': {
         'name': 'Time Series Forecasting',
-        'script': 'labs_lite/lab_09_time_series/time_series_demo_lite.py',
+        'script': 'labs_lite/lab_09_time_series/time_series_lite.py',
         'output_dir': 'labs_lite/lab_09_time_series/output',
         'description': 'Quick LSTM/GRU forecasting',
         'category': 'lite'
     },
     'lab_10_lite': {
         'name': 'Sequence to Sequence',
-        'script': 'labs_lite/lab_10_seq2seq/seq2seq_demo_lite.py',
+        'script': 'labs_lite/lab_10_seq2seq/seq2seq_lite.py',
         'output_dir': 'labs_lite/lab_10_seq2seq/output',
         'description': 'Fast encoder-decoder with attention',
         'category': 'lite'
