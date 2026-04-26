@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """
-Lab 10: Sequence to Sequence Learning
-======================================
+Lab 10: Sequence to Sequence Learning (FULL VERSION)
+=====================================================
 
-This program demonstrates:
-1. Seq2Seq architecture with encoder-decoder
-2. Attention mechanism
-3. Machine translation (synthetic language)
-4. Text summarization
-5. Beam search decoding
-6. BLEU score evaluation
+Full version using real English-French translation dataset with scaled-up parameters.
+
+Full version parameters (vs lite):
+- Uses 10,000 real translation pairs (vs 2,000)
+- 20 epochs (vs 10)
+- Larger batch size: 64 (vs 32)
+- Larger vocabulary: 8000 words per language (vs 3000)
+- Larger model: embed=256, hidden=512 (vs embed=128, hidden=256)
+
+Dataset: English-French Translation Dataset
+Expected runtime: ~30-45 minutes on CPU
 
 Author: Deep Learning Lab
 """
@@ -25,6 +29,9 @@ from pathlib import Path
 import time
 import random
 from tqdm import tqdm
+import pandas as pd
+from collections import Counter
+import re
 
 # Set random seeds
 torch.manual_seed(42)
@@ -37,79 +44,140 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
 
-# Vocabulary for synthetic language translation
-SRC_VOCAB = ['<PAD>', '<SOS>', '<EOS>', 'the', 'a', 'cat', 'dog', 'bird',
-             'runs', 'jumps', 'flies', 'quickly', 'slowly', 'happily']
-TGT_VOCAB = ['<PAD>', '<SOS>', '<EOS>', 'le', 'un', 'chat', 'chien', 'oiseau',
-             'court', 'saute', 'vole', 'rapidement', 'lentement', 'joyeusement']
+# Special tokens
+PAD_TOKEN = '<PAD>'
+SOS_TOKEN = '<SOS>'
+EOS_TOKEN = '<EOS>'
+UNK_TOKEN = '<UNK>'
 
-SRC_WORD2IDX = {word: idx for idx, word in enumerate(SRC_VOCAB)}
-TGT_WORD2IDX = {word: idx for idx, word in enumerate(TGT_VOCAB)}
-SRC_IDX2WORD = {idx: word for word, idx in SRC_WORD2IDX.items()}
-TGT_IDX2WORD = {idx: word for word, idx in TGT_WORD2IDX.items()}
-
-SRC_VOCAB_SIZE = len(SRC_VOCAB)
-TGT_VOCAB_SIZE = len(TGT_VOCAB)
-
-PAD_IDX = 0
-SOS_IDX = 1
-EOS_IDX = 2
+# Full version configuration
+NUM_SAMPLES = 10000
+BATCH_SIZE = 64
+NUM_EPOCHS = 20
+MAX_LENGTH = 20
+VOCAB_SIZE = 8000  # Larger vocabulary
+EMBED_SIZE = 256   # Larger embedding
+HIDDEN_SIZE = 512  # Larger hidden state
 
 
-class SyntheticTranslationDataset(Dataset):
-    """Generate synthetic translation pairs."""
-    
-    def __init__(self, num_samples=1000, max_length=10):
-        self.num_samples = num_samples
+class TranslationDataset(Dataset):
+    """Load English-French translation dataset."""
+
+    def __init__(self, data_file, max_samples=None, max_length=20):
         self.max_length = max_length
-        
-        # Translation pairs (English -> French-like)
-        self.templates = [
-            (['the', 'cat', 'runs'], ['le', 'chat', 'court']),
-            (['a', 'dog', 'jumps'], ['un', 'chien', 'saute']),
-            (['the', 'bird', 'flies'], ['le', 'oiseau', 'vole']),
-            (['the', 'cat', 'runs', 'quickly'], ['le', 'chat', 'court', 'rapidement']),
-            (['a', 'dog', 'jumps', 'happily'], ['un', 'chien', 'saute', 'joyeusement']),
-            (['the', 'bird', 'flies', 'slowly'], ['le', 'oiseau', 'vole', 'lentement']),
-        ]
-        
-    def __len__(self):
-        return self.num_samples
-    
-    def sentence_to_indices(self, words, vocab, add_eos=True):
-        """Convert sentence to indices."""
-        indices = [SOS_IDX]
-        indices.extend([vocab.get(word, 0) for word in words])
+
+        # Load translations
+        print(f"Loading translation data from {data_file.name}...")
+        df = pd.read_csv(data_file)
+
+        # Filter by length and take samples
+        self.pairs = []
+        for _, row in df.iterrows():
+            en_text = self.normalize_text(str(row['en']))
+            fr_text = self.normalize_text(str(row['fr']))
+
+            en_words = en_text.split()
+            fr_words = fr_text.split()
+
+            if (len(en_words) <= max_length and len(fr_words) <= max_length and
+                len(en_words) > 0 and len(fr_words) > 0):
+                self.pairs.append((en_text, fr_text))
+
+                if max_samples and len(self.pairs) >= max_samples:
+                    break
+
+        print(f"Loaded {len(self.pairs)} translation pairs")
+
+        # Build vocabularies
+        self.build_vocabularies()
+
+    def normalize_text(self, text):
+        """Normalize text."""
+        text = text.lower()
+        text = re.sub(r"[^a-z0-9\s']", "", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
+
+    def build_vocabularies(self):
+        """Build vocabularies for source and target languages."""
+        print("Building vocabularies...")
+
+        en_word_counts = Counter()
+        fr_word_counts = Counter()
+
+        for en_text, fr_text in self.pairs:
+            en_word_counts.update(en_text.split())
+            fr_word_counts.update(fr_text.split())
+
+        # English vocabulary
+        en_most_common = en_word_counts.most_common(VOCAB_SIZE - 4)
+        self.en_vocab = [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN]
+        self.en_vocab.extend([word for word, _ in en_most_common])
+
+        self.en_word_to_idx = {word: idx for idx, word in enumerate(self.en_vocab)}
+        self.en_idx_to_word = {idx: word for word, idx in self.en_word_to_idx.items()}
+
+        # French vocabulary
+        fr_most_common = fr_word_counts.most_common(VOCAB_SIZE - 4)
+        self.fr_vocab = [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN]
+        self.fr_vocab.extend([word for word, _ in fr_most_common])
+
+        self.fr_word_to_idx = {word: idx for idx, word in enumerate(self.fr_vocab)}
+        self.fr_idx_to_word = {idx: word for word, idx in self.fr_word_to_idx.items()}
+
+        # Special token indices
+        self.pad_idx = 0
+        self.sos_idx = 1
+        self.eos_idx = 2
+        self.unk_idx = 3
+
+        print(f"English vocabulary size: {len(self.en_vocab)}")
+        print(f"French vocabulary size: {len(self.fr_vocab)}")
+
+    def text_to_indices(self, text, vocab, add_sos=False, add_eos=False):
+        """Convert text to indices."""
+        words = text.split()
+        indices = []
+
+        if add_sos:
+            indices.append(self.sos_idx)
+
+        for word in words:
+            idx = vocab.get(word, self.unk_idx)
+            indices.append(idx)
+
         if add_eos:
-            indices.append(EOS_IDX)
-        
-        # Pad
-        while len(indices) < self.max_length:
-            indices.append(PAD_IDX)
-        
-        return indices[:self.max_length]
-    
+            indices.append(self.eos_idx)
+
+        # Pad or truncate
+        if len(indices) < self.max_length:
+            indices += [self.pad_idx] * (self.max_length - len(indices))
+        else:
+            indices = indices[:self.max_length]
+
+        return indices
+
+    def __len__(self):
+        return len(self.pairs)
+
     def __getitem__(self, idx):
-        np.random.seed(idx)
-        
-        # Random template
-        src_words, tgt_words = random.choice(self.templates)
-        
-        # Convert to indices
-        src_indices = self.sentence_to_indices(src_words, SRC_WORD2IDX, add_eos=True)
-        tgt_indices = self.sentence_to_indices(tgt_words, TGT_WORD2IDX, add_eos=True)
-        
-        return torch.LongTensor(src_indices), torch.LongTensor(tgt_indices)
+        en_text, fr_text = self.pairs[idx]
+
+        en_indices = self.text_to_indices(en_text, self.en_word_to_idx, add_eos=True)
+        fr_indices = self.text_to_indices(fr_text, self.fr_word_to_idx, add_sos=True, add_eos=True)
+
+        return torch.LongTensor(en_indices), torch.LongTensor(fr_indices)
 
 
 class Encoder(nn.Module):
-    """LSTM Encoder."""
-    
-    def __init__(self, vocab_size, embed_size=128, hidden_size=256, num_layers=2, dropout=0.3):
+    """LSTM Encoder (larger for full version)."""
+
+    def __init__(self, vocab_size, embed_size=256, hidden_size=512, num_layers=2, dropout=0.3):
         super(Encoder, self).__init__()
-        
-        self.embedding = nn.Embedding(vocab_size, embed_size, padding_idx=PAD_IDX)
+
+        self.embedding = nn.Embedding(vocab_size, embed_size, padding_idx=0)
         self.lstm = nn.LSTM(
             embed_size,
             hidden_size,
@@ -117,7 +185,7 @@ class Encoder(nn.Module):
             batch_first=True,
             dropout=dropout if num_layers > 1 else 0
         )
-        
+
     def forward(self, x):
         # x: [batch, seq_len]
         embedded = self.embedding(x)  # [batch, seq_len, embed_size]
@@ -126,80 +194,12 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """LSTM Decoder."""
-    
-    def __init__(self, vocab_size, embed_size=128, hidden_size=256, num_layers=2, dropout=0.3):
+    """LSTM Decoder with attention (larger for full version)."""
+
+    def __init__(self, vocab_size, embed_size=256, hidden_size=512, num_layers=2, dropout=0.3):
         super(Decoder, self).__init__()
-        
-        self.embedding = nn.Embedding(vocab_size, embed_size, padding_idx=PAD_IDX)
-        self.lstm = nn.LSTM(
-            embed_size,
-            hidden_size,
-            num_layers,
-            batch_first=True,
-            dropout=dropout if num_layers > 1 else 0
-        )
-        self.fc = nn.Linear(hidden_size, vocab_size)
-        
-    def forward(self, x, hidden, cell):
-        # x: [batch, 1]
-        embedded = self.embedding(x)  # [batch, 1, embed_size]
-        output, (hidden, cell) = self.lstm(embedded, (hidden, cell))
-        prediction = self.fc(output.squeeze(1))  # [batch, vocab_size]
-        return prediction, hidden, cell
 
-
-class Seq2Seq(nn.Module):
-    """Sequence to Sequence model."""
-    
-    def __init__(self, encoder, decoder):
-        super(Seq2Seq, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
-        
-    def forward(self, src, tgt, teacher_forcing_ratio=0.5):
-        # src: [batch, src_len]
-        # tgt: [batch, tgt_len]
-        
-        batch_size = src.size(0)
-        tgt_len = tgt.size(1)
-        tgt_vocab_size = self.decoder.fc.out_features
-        
-        # Encode
-        encoder_outputs, hidden, cell = self.encoder(src)
-        
-        # First input to decoder is SOS token
-        decoder_input = tgt[:, 0].unsqueeze(1)  # [batch, 1]
-        
-        # Store outputs
-        outputs = torch.zeros(batch_size, tgt_len, tgt_vocab_size).to(device)
-        
-        # Decode
-        for t in range(1, tgt_len):
-            # Check if decoder is AttentionDecoder
-            if isinstance(self.decoder, AttentionDecoder):
-                prediction, hidden, cell = self.decoder(decoder_input, hidden, cell, encoder_outputs)
-            else:
-                prediction, hidden, cell = self.decoder(decoder_input, hidden, cell)
-            outputs[:, t] = prediction
-            
-            # Teacher forcing
-            teacher_force = random.random() < teacher_forcing_ratio
-            top1 = prediction.argmax(1)
-            
-            decoder_input = tgt[:, t].unsqueeze(1) if teacher_force else top1.unsqueeze(1)
-        
-        return outputs
-
-
-class AttentionDecoder(nn.Module):
-    """Decoder with attention mechanism."""
-    
-    def __init__(self, vocab_size, embed_size=128, hidden_size=256, num_layers=2, dropout=0.3):
-        super(AttentionDecoder, self).__init__()
-        
-        self.embedding = nn.Embedding(vocab_size, embed_size, padding_idx=PAD_IDX)
-        self.attention = nn.Linear(hidden_size * 2, hidden_size)
+        self.embedding = nn.Embedding(vocab_size, embed_size, padding_idx=0)
         self.lstm = nn.LSTM(
             embed_size + hidden_size,
             hidden_size,
@@ -208,301 +208,245 @@ class AttentionDecoder(nn.Module):
             dropout=dropout if num_layers > 1 else 0
         )
         self.fc = nn.Linear(hidden_size, vocab_size)
-        
+        self.attention = nn.Linear(hidden_size * 2, 1)
+
     def forward(self, x, hidden, cell, encoder_outputs):
         # x: [batch, 1]
-        # encoder_outputs: [batch, src_len, hidden_size]
-        
         embedded = self.embedding(x)  # [batch, 1, embed_size]
-        
-        # Simple attention (using last hidden state)
-        # In practice, use more sophisticated attention
-        last_hidden = hidden[-1].unsqueeze(1)  # [batch, 1, hidden_size]
-        
+
+        # Attention
+        batch_size = encoder_outputs.size(0)
+        seq_len = encoder_outputs.size(1)
+
+        # Repeat hidden for attention
+        hidden_repeated = hidden[-1].unsqueeze(1).repeat(1, seq_len, 1)
+
         # Compute attention scores
-        attention_scores = torch.bmm(last_hidden, encoder_outputs.transpose(1, 2))
-        attention_weights = torch.softmax(attention_scores, dim=2)
-        
-        # Context vector
-        context = torch.bmm(attention_weights, encoder_outputs)  # [batch, 1, hidden_size]
-        
-        # Combine embedded input and context
+        attention_input = torch.cat([encoder_outputs, hidden_repeated], dim=2)
+        attention_scores = self.attention(attention_input).squeeze(2)
+        attention_weights = torch.softmax(attention_scores, dim=1)
+
+        # Apply attention
+        context = torch.bmm(attention_weights.unsqueeze(1), encoder_outputs)
+
+        # Combine with embedding
         lstm_input = torch.cat([embedded, context], dim=2)
-        
+
+        # LSTM
         output, (hidden, cell) = self.lstm(lstm_input, (hidden, cell))
+
+        # Predict
         prediction = self.fc(output.squeeze(1))
-        
+
         return prediction, hidden, cell
 
 
-def train_model(model, train_loader, val_loader, num_epochs=50, model_name="Seq2Seq"):
-    """Train the seq2seq model."""
-    criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)
+class Seq2Seq(nn.Module):
+    """Sequence-to-sequence model with attention."""
+
+    def __init__(self, src_vocab_size, tgt_vocab_size, embed_size=256, hidden_size=512):
+        super(Seq2Seq, self).__init__()
+
+        self.encoder = Encoder(src_vocab_size, embed_size, hidden_size)
+        self.decoder = Decoder(tgt_vocab_size, embed_size, hidden_size)
+
+    def forward(self, src, tgt, teacher_forcing_ratio=0.5):
+        batch_size = src.size(0)
+        tgt_len = tgt.size(1)
+        tgt_vocab_size = self.decoder.fc.out_features
+
+        # Encode
+        encoder_outputs, hidden, cell = self.encoder(src)
+
+        # Decode
+        outputs = torch.zeros(batch_size, tgt_len, tgt_vocab_size).to(src.device)
+        decoder_input = tgt[:, 0].unsqueeze(1)
+
+        for t in range(1, tgt_len):
+            output, hidden, cell = self.decoder(decoder_input, hidden, cell, encoder_outputs)
+            outputs[:, t, :] = output
+
+            # Teacher forcing
+            use_teacher_forcing = random.random() < teacher_forcing_ratio
+            if use_teacher_forcing:
+                decoder_input = tgt[:, t].unsqueeze(1)
+            else:
+                decoder_input = output.argmax(1).unsqueeze(1)
+
+        return outputs
+
+
+def train_model(model, train_loader, num_epochs, device, pad_idx):
+    """Train the translation model."""
+    model = model.to(device)
+    criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5)
-    
-    history = {'train_loss': [], 'val_loss': []}
-    
-    print(f"\nTraining {model_name}...")
-    print("-" * 60)
-    
-    best_val_loss = float('inf')
-    
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
+
+    history = {'loss': []}
+
+    print("\nTraining Seq2Seq Translation Model...")
     for epoch in range(num_epochs):
-        # Training
         model.train()
-        train_loss = 0.0
-        
-        train_pbar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} [Train]', leave=False)
-        for src, tgt in train_pbar:
+        epoch_loss = 0
+
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")
+        for src, tgt in pbar:
             src = src.to(device)
             tgt = tgt.to(device)
-            
+
             optimizer.zero_grad()
-            
-            # Forward pass
-            output = model(src, tgt, teacher_forcing_ratio=0.5)
-            
-            # Calculate loss (ignore first token which is SOS)
-            output = output[:, 1:].reshape(-1, output.size(-1))
-            tgt = tgt[:, 1:].reshape(-1)
-            
-            loss = criterion(output, tgt)
+
+            outputs = model(src, tgt, teacher_forcing_ratio=0.5)
+
+            # Reshape for loss
+            outputs = outputs[:, 1:, :].reshape(-1, outputs.size(-1))
+            targets = tgt[:, 1:].reshape(-1)
+
+            loss = criterion(outputs, targets)
             loss.backward()
-            
-            # Gradient clipping
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            
             optimizer.step()
-            train_loss += loss.item()
-            train_pbar.set_postfix({'loss': f'{loss.item():.4f}'})
-        
-        train_loss /= len(train_loader)
-        
-        # Validation
-        model.eval()
-        val_loss = 0.0
-        
-        with torch.no_grad():
-            val_pbar = tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} [Val]', leave=False)
-            for src, tgt in val_pbar:
-                src = src.to(device)
-                tgt = tgt.to(device)
-                
-                output = model(src, tgt, teacher_forcing_ratio=0)
-                
-                output = output[:, 1:].reshape(-1, output.size(-1))
-                tgt = tgt[:, 1:].reshape(-1)
-                
-                loss = criterion(output, tgt)
-                val_loss += loss.item()
-                val_pbar.set_postfix({'loss': f'{loss.item():.4f}'})
-        
-        val_loss /= len(val_loader)
-        
-        scheduler.step(val_loss)
-        
-        history['train_loss'].append(train_loss)
-        history['val_loss'].append(val_loss)
-        
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save(model.state_dict(),
-                      OUTPUT_DIR / f'{model_name.lower().replace(" ", "_")}_best.pth')
-        
-        print(f"Epoch [{epoch+1}/{num_epochs}] - "
-              f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
-    
-    print(f"SUCCESS: {model_name} training complete! Best Val Loss: {best_val_loss:.4f}")
+
+            epoch_loss += loss.item()
+            pbar.set_postfix({'loss': f'{loss.item():.4f}'})
+
+        scheduler.step()
+
+        avg_loss = epoch_loss / len(train_loader)
+        history['loss'].append(avg_loss)
+
+        print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}")
+
     return history
 
 
-def translate(model, src_sentence, max_length=10):
+def translate(model, src_text, dataset, device, max_length=20):
     """Translate a source sentence."""
     model.eval()
-    
+
     with torch.no_grad():
+        # Prepare input
+        src_indices = dataset.text_to_indices(src_text, dataset.en_word_to_idx, add_eos=True)
+        src_tensor = torch.LongTensor([src_indices]).to(device)
+
         # Encode
-        encoder_outputs, hidden, cell = model.encoder(src_sentence)
-        
-        # Start with SOS token
-        decoder_input = torch.LongTensor([[SOS_IDX]]).to(device)
-        
-        translated = []
-        
+        encoder_outputs, hidden, cell = model.encoder(src_tensor)
+
+        # Decode
+        decoder_input = torch.LongTensor([[dataset.sos_idx]]).to(device)
+        translation_indices = []
+
         for _ in range(max_length):
-            if isinstance(model.decoder, AttentionDecoder):
-                prediction, hidden, cell = model.decoder(decoder_input, hidden, cell, encoder_outputs)
-            else:
-                prediction, hidden, cell = model.decoder(decoder_input, hidden, cell)
-            
-            top1 = prediction.argmax(1)
-            
-            if top1.item() == EOS_IDX:
+            output, hidden, cell = model.decoder(decoder_input, hidden, cell, encoder_outputs)
+            predicted = output.argmax(1)
+
+            predicted_idx = predicted.item()
+            if predicted_idx == dataset.eos_idx:
                 break
-            
-            translated.append(top1.item())
-            decoder_input = top1.unsqueeze(1)
-        
-        # Convert to words
-        words = [TGT_IDX2WORD.get(idx, '<UNK>') for idx in translated]
-        
-        return ' '.join(words)
+
+            translation_indices.append(predicted_idx)
+            decoder_input = predicted.unsqueeze(1)
+
+        # Convert to text
+        translation_words = []
+        for idx in translation_indices:
+            if idx in dataset.fr_idx_to_word:
+                word = dataset.fr_idx_to_word[idx]
+                if word not in [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]:
+                    translation_words.append(word)
+
+        return ' '.join(translation_words)
 
 
-def visualize_translations(model, dataset, num_samples=10, model_name="Seq2Seq"):
-    """Visualize translation examples."""
-    model.eval()
-    
-    print(f"\n{model_name} - Translation Examples:")
-    print("-" * 70)
-    
-    results = []
-    
-    for i in range(num_samples):
-        src, tgt = dataset[i]
-        
-        # Source sentence
-        src_words = [SRC_IDX2WORD.get(idx.item(), '<UNK>') 
-                    for idx in src if idx.item() not in [PAD_IDX, SOS_IDX, EOS_IDX]]
-        src_text = ' '.join(src_words)
-        
-        # Target sentence
-        tgt_words = [TGT_IDX2WORD.get(idx.item(), '<UNK>')
-                    for idx in tgt if idx.item() not in [PAD_IDX, SOS_IDX, EOS_IDX]]
-        tgt_text = ' '.join(tgt_words)
-        
-        # Translate
-        pred_text = translate(model, src.unsqueeze(0).to(device))
-        
-        results.append((src_text, tgt_text, pred_text))
-        
-        print(f"Source:  {src_text}")
-        print(f"Target:  {tgt_text}")
-        print(f"Predict: {pred_text}")
-        print()
-    
-    return results
+def demo_translations(model, dataset, device):
+    """Demo translations with sample inputs."""
+    print("\n" + "="*60)
+    print("Translation Demo")
+    print("="*60)
+
+    # Get some test samples
+    test_indices = random.sample(range(len(dataset)), 5)
+
+    for idx in test_indices:
+        en_text, fr_text = dataset.pairs[idx]
+        translation = translate(model, en_text, dataset, device)
+
+        print(f"\nEnglish: {en_text}")
+        print(f"Reference: {fr_text}")
+        print(f"Translation: {translation}")
 
 
-def plot_training_comparison(histories, model_names):
-    """Plot training comparison."""
-    fig, ax = plt.subplots(figsize=(12, 6))
-    
-    for history, name in zip(histories, model_names):
-        ax.plot(history['train_loss'], label=f'{name} Train', linewidth=2)
-        ax.plot(history['val_loss'], label=f'{name} Val', linewidth=2, linestyle='--')
-    
-    ax.set_xlabel('Epoch', fontsize=12)
-    ax.set_ylabel('Loss', fontsize=12)
-    ax.set_title('Training Loss Comparison', fontsize=14, fontweight='bold')
-    ax.legend()
-    ax.grid(alpha=0.3)
-    
+def plot_training_history(history):
+    """Plot training history."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(history['loss'], 'b-', label='Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training Loss Over Time')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    output_path = OUTPUT_DIR / 'training_comparison.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'training_history.png', dpi=150, bbox_inches='tight')
+    print(f"Saved training history to {OUTPUT_DIR / 'training_history.png'}")
     plt.close()
-    
-    return output_path
 
 
 def main():
-    """Main function."""
-    print("=" * 70)
-    print("Lab 10: Sequence to Sequence Learning")
-    print("=" * 70)
-    print()
-    print(f"Device: {device}")
-    print()
-    
-    # Create datasets
-    print("Creating synthetic translation dataset...")
-    train_dataset = SyntheticTranslationDataset(num_samples=800, max_length=10)
-    val_dataset = SyntheticTranslationDataset(num_samples=200, max_length=10)
-    
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-    
-    print(f"  • Training samples: {len(train_dataset)}")
-    print(f"  • Validation samples: {len(val_dataset)}")
-    print(f"  • Source vocab size: {SRC_VOCAB_SIZE}")
-    print(f"  • Target vocab size: {TGT_VOCAB_SIZE}")
-    print()
-    
-    # Train basic Seq2Seq
-    print("=" * 70)
-    print("Training Basic Seq2Seq")
-    print("=" * 70)
-    
-    encoder = Encoder(SRC_VOCAB_SIZE, embed_size=128, hidden_size=256, num_layers=2).to(device)
-    decoder = Decoder(TGT_VOCAB_SIZE, embed_size=128, hidden_size=256, num_layers=2).to(device)
-    seq2seq = Seq2Seq(encoder, decoder).to(device)
-    
+    print("=" * 60)
+    print("Lab 10: Seq2Seq Translation (English-French) - FULL")
+    print("=" * 60)
+
     start_time = time.time()
-    seq2seq_history = train_model(seq2seq, train_loader, val_loader, 
-                                  num_epochs=50, model_name="Basic Seq2Seq")
-    seq2seq_time = time.time() - start_time
-    
-    # Train Seq2Seq with Attention
-    print()
-    print("=" * 70)
-    print("Training Seq2Seq with Attention")
-    print("=" * 70)
-    
-    encoder_attn = Encoder(SRC_VOCAB_SIZE, embed_size=128, hidden_size=256, num_layers=2).to(device)
-    decoder_attn = AttentionDecoder(TGT_VOCAB_SIZE, embed_size=128, hidden_size=256, num_layers=2).to(device)
-    seq2seq_attn = Seq2Seq(encoder_attn, decoder_attn).to(device)
-    
-    start_time = time.time()
-    attn_history = train_model(seq2seq_attn, train_loader, val_loader,
-                               num_epochs=50, model_name="Seq2Seq + Attention")
-    attn_time = time.time() - start_time
-    
-    print()
-    print("=" * 70)
-    print("Training Summary")
-    print("=" * 70)
-    print(f"Basic Seq2Seq:")
-    print(f"  • Training time: {seq2seq_time:.2f}s")
-    print(f"  • Final train loss: {seq2seq_history['train_loss'][-1]:.4f}")
-    print(f"  • Final val loss: {seq2seq_history['val_loss'][-1]:.4f}")
-    print()
-    print(f"Seq2Seq with Attention:")
-    print(f"  • Training time: {attn_time:.2f}s")
-    print(f"  • Final train loss: {attn_history['train_loss'][-1]:.4f}")
-    print(f"  • Final val loss: {attn_history['val_loss'][-1]:.4f}")
-    print()
-    
-    # Visualize translations
-    print("=" * 70)
-    visualize_translations(seq2seq, val_dataset, num_samples=10, model_name="Basic Seq2Seq")
-    
-    print("=" * 70)
-    visualize_translations(seq2seq_attn, val_dataset, num_samples=10, model_name="Seq2Seq + Attention")
-    
-    # Plot comparison
-    print("Generating visualizations...")
-    comparison_plot = plot_training_comparison(
-        [seq2seq_history, attn_history],
-        ['Basic Seq2Seq', 'Seq2Seq + Attention']
+
+    # Check if dataset exists
+    data_file = Path("data/translation/en-fr.csv")
+    if not data_file.exists():
+        print(f"\nError: Translation dataset not found at {data_file}")
+        print("Please ensure the dataset is downloaded.")
+        return
+
+    # Load dataset
+    print(f"\nLoading translation dataset (max {NUM_SAMPLES} pairs)...")
+    dataset = TranslationDataset(
+        data_file=data_file,
+        max_samples=NUM_SAMPLES,
+        max_length=MAX_LENGTH
     )
-    print(f"  SUCCESS: Training comparison: {comparison_plot}")
-    print()
-    
-    print("=" * 70)
-    print("Lab 10 Complete!")
-    print("=" * 70)
-    print()
-    print("Key Findings:")
-    print("  • Seq2Seq enables variable-length input/output")
-    print("  • Attention mechanism improves long sequence handling")
-    print("  • Applications: translation, summarization, dialogue")
-    print("  • Modern systems use Transformers (BERT, GPT)")
-    print()
+
+    train_loader = DataLoader(
+        dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        num_workers=0
+    )
+
+    # Create model
+    print("\nCreating Seq2Seq Translation Model (embed=256, hidden=512)...")
+    model = Seq2Seq(
+        src_vocab_size=len(dataset.en_vocab),
+        tgt_vocab_size=len(dataset.fr_vocab),
+        embed_size=EMBED_SIZE,
+        hidden_size=HIDDEN_SIZE
+    )
+    print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+
+    # Train model
+    history = train_model(model, train_loader, NUM_EPOCHS, device, dataset.pad_idx)
+
+    # Plot training history
+    plot_training_history(history)
+
+    # Demo translations
+    demo_translations(model, dataset, device)
+
+    elapsed_time = time.time() - start_time
+    print(f"\n{'='*60}")
+    print(f"Total execution time: {elapsed_time:.2f} seconds ({elapsed_time/60:.2f} minutes)")
+    print(f"{'='*60}")
+    print(f"\nOutputs saved to: {OUTPUT_DIR.absolute()}")
+    print("\nLab 10 completed successfully!")
 
 
 if __name__ == "__main__":
     main()
-
-

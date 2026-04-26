@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """
-Lab 7: Image Captioning with RNN and LSTM
-==========================================
+Lab 7: Image Captioning with RNN and LSTM (FULL VERSION)
+=========================================================
 
-This program demonstrates:
-1. Image captioning with CNN encoder + RNN/LSTM decoder
-2. Comparison between Vanilla RNN and LSTM
-3. Attention mechanism (simplified)
-4. BLEU score evaluation
-5. Beam search decoding
-6. Caption generation and visualization
+Full version using Flickr8k dataset with scaled-up parameters.
+
+Full version parameters (vs lite):
+- Uses 6000 real Flickr8k images (vs 2000)
+- 20 epochs (vs 30 - adjusted for larger dataset)
+- Image size: 224x224 (vs 128x128)
+- Embedding dim: 256, hidden dim: 512 (vs 256 hidden)
+- Larger batch size: 32 (vs 16)
+
+Dataset: Flickr8k
+Expected runtime: ~60-90 minutes on CPU
 
 Author: Deep Learning Lab
 """
@@ -25,10 +29,14 @@ from pathlib import Path
 import time
 from collections import Counter
 from tqdm import tqdm
+from PIL import Image
+import pandas as pd
+import random
 
 # Set random seeds
 torch.manual_seed(42)
 np.random.seed(42)
+random.seed(42)
 
 # Create output directory
 OUTPUT_DIR = Path("output")
@@ -36,455 +44,401 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# Vocabulary
-VOCAB = ['<PAD>', '<START>', '<END>', 'a', 'red', 'blue', 'green', 'yellow',
-         'circle', 'square', 'triangle', 'with', 'and', 'on', 'the', 'image']
-WORD_TO_IDX = {word: idx for idx, word in enumerate(VOCAB)}
-IDX_TO_WORD = {idx: word for word, idx in WORD_TO_IDX.items()}
-VOCAB_SIZE = len(VOCAB)
+print(f"Using device: {device}")
 
 # Special tokens
-PAD_IDX = WORD_TO_IDX['<PAD>']
-START_IDX = WORD_TO_IDX['<START>']
-END_IDX = WORD_TO_IDX['<END>']
+PAD_TOKEN = '<PAD>'
+START_TOKEN = '<START>'
+END_TOKEN = '<END>'
+UNK_TOKEN = '<UNK>'
+
+# Full version configuration
+NUM_SAMPLES = 6000
+BATCH_SIZE = 32
+NUM_EPOCHS = 20
+IMG_SIZE = 224
+MAX_CAPTION_LEN = 20
+VOCAB_SIZE = 8000  # Larger vocabulary for 6000 samples
+EMBED_SIZE = 256
+HIDDEN_SIZE = 512
 
 
-class SyntheticCaptionDataset(Dataset):
-    """Generate synthetic images with captions."""
-    
-    def __init__(self, num_samples=1000, img_size=64):
-        self.num_samples = num_samples
+class Flickr8kDataset(Dataset):
+    """Load Flickr8k dataset for image captioning."""
+
+    def __init__(self, data_root, img_size=224, max_samples=None, max_caption_len=20):
+        self.data_root = Path(data_root)
         self.img_size = img_size
-        self.max_caption_len = 10
-        
+        self.max_caption_len = max_caption_len
+
+        # Paths
+        self.img_dir = self.data_root / "Images"
+        captions_file = self.data_root / "captions.txt"
+
+        # Load captions
+        print("Loading captions...")
+        df = pd.read_csv(captions_file)
+
+        # Group by image and take first caption for each
+        self.samples = []
+        seen_images = set()
+
+        for _, row in df.iterrows():
+            img_name = row['image']
+            if img_name not in seen_images:
+                img_path = self.img_dir / img_name
+                if img_path.exists():
+                    caption = row['caption']
+                    self.samples.append((img_name, caption))
+                    seen_images.add(img_name)
+
+                    if max_samples and len(self.samples) >= max_samples:
+                        break
+
+        print(f"Loaded {len(self.samples)} image-caption pairs")
+
+        # Build vocabulary
+        self.build_vocabulary()
+
+    def build_vocabulary(self):
+        """Build vocabulary from captions."""
+        print("Building vocabulary...")
+        word_counts = Counter()
+
+        for _, caption in self.samples:
+            words = caption.lower().split()
+            word_counts.update(words)
+
+        # Take most common words
+        most_common = word_counts.most_common(VOCAB_SIZE - 4)  # Reserve space for special tokens
+
+        # Create vocabulary
+        self.vocab = [PAD_TOKEN, START_TOKEN, END_TOKEN, UNK_TOKEN]
+        self.vocab.extend([word for word, _ in most_common])
+
+        self.word_to_idx = {word: idx for idx, word in enumerate(self.vocab)}
+        self.idx_to_word = {idx: word for word, idx in self.word_to_idx.items()}
+
+        self.pad_idx = self.word_to_idx[PAD_TOKEN]
+        self.start_idx = self.word_to_idx[START_TOKEN]
+        self.end_idx = self.word_to_idx[END_TOKEN]
+        self.unk_idx = self.word_to_idx[UNK_TOKEN]
+
+        print(f"Vocabulary size: {len(self.vocab)}")
+
+    def caption_to_indices(self, caption):
+        """Convert caption to indices."""
+        words = caption.lower().split()
+        indices = [self.start_idx]
+
+        for word in words:
+            idx = self.word_to_idx.get(word, self.unk_idx)
+            indices.append(idx)
+            if len(indices) >= self.max_caption_len - 1:
+                break
+
+        indices.append(self.end_idx)
+
+        # Pad
+        while len(indices) < self.max_caption_len:
+            indices.append(self.pad_idx)
+
+        return indices[:self.max_caption_len]
+
     def __len__(self):
-        return self.num_samples
-    
-    def generate_caption(self, shapes, colors):
-        """Generate caption from shapes and colors."""
-        caption_words = ['<START>']
-        
-        if len(shapes) == 1:
-            caption_words.extend(['a', colors[0], shapes[0]])
-        elif len(shapes) == 2:
-            caption_words.extend(['a', colors[0], shapes[0], 'and', 'a', colors[1], shapes[1]])
-        else:
-            caption_words.extend(['a', colors[0], shapes[0]])
-        
-        caption_words.append('<END>')
-        
-        # Convert to indices
-        caption_indices = [WORD_TO_IDX.get(word, 0) for word in caption_words]
-        
-        # Pad to max length
-        while len(caption_indices) < self.max_caption_len:
-            caption_indices.append(PAD_IDX)
-        
-        return caption_indices[:self.max_caption_len]
-    
+        return len(self.samples)
+
     def __getitem__(self, idx):
-        np.random.seed(idx)
-        
-        # Create image
-        img = np.ones((3, self.img_size, self.img_size), dtype=np.float32) * 0.9
-        
-        # Number of shapes
-        num_shapes = np.random.randint(1, 3)
-        
-        shapes = []
-        colors = []
-        
-        color_map = {
-            'red': [1.0, 0.0, 0.0],
-            'blue': [0.0, 0.0, 1.0],
-            'green': [0.0, 1.0, 0.0],
-            'yellow': [1.0, 1.0, 0.0]
-        }
-        
-        for _ in range(num_shapes):
-            # Random shape and color
-            shape = np.random.choice(['circle', 'square', 'triangle'])
-            color_name = np.random.choice(['red', 'blue', 'green', 'yellow'])
-            color = color_map[color_name]
-            
-            shapes.append(shape)
-            colors.append(color_name)
-            
-            # Random position
-            cx = np.random.randint(15, self.img_size - 15)
-            cy = np.random.randint(15, self.img_size - 15)
-            size = 10
-            
-            if shape == 'circle':
-                y, x = np.ogrid[:self.img_size, :self.img_size]
-                mask = (x - cx)**2 + (y - cy)**2 <= size**2
-                for c in range(3):
-                    img[c][mask] = color[c]
-            
-            elif shape == 'square':
-                x1, y1 = cx - size, cy - size
-                x2, y2 = cx + size, cy + size
-                for c in range(3):
-                    img[c, y1:y2, x1:x2] = color[c]
-            
-            else:  # triangle
-                for y in range(cy - size, cy + size):
-                    for x in range(cx - size, cx + size):
-                        if 0 <= y < self.img_size and 0 <= x < self.img_size:
-                            if abs(x - cx) <= (y - (cy - size)):
-                                for c in range(3):
-                                    img[c, y, x] = color[c]
-        
-        # Generate caption
-        caption = self.generate_caption(shapes, colors)
-        
-        return torch.FloatTensor(img), torch.LongTensor(caption)
+        img_name, caption = self.samples[idx]
+
+        # Load and preprocess image
+        img_path = self.img_dir / img_name
+        img = Image.open(img_path).convert('RGB')
+        img = img.resize((self.img_size, self.img_size))
+        img = np.array(img).transpose(2, 0, 1).astype(np.float32) / 255.0
+
+        # Convert caption to indices
+        caption_indices = self.caption_to_indices(caption)
+
+        return torch.FloatTensor(img), torch.LongTensor(caption_indices)
 
 
 class CNNEncoder(nn.Module):
-    """CNN encoder for image features."""
-    
+    """CNN encoder for image features (deeper for full version)."""
+
     def __init__(self, embed_size=256):
         super(CNNEncoder, self).__init__()
-        
+
         self.cnn = nn.Sequential(
+            # Block 1
             nn.Conv2d(3, 32, 3, padding=1),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, 2),
-            
+            nn.MaxPool2d(2),
+
+            # Block 2
             nn.Conv2d(32, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, 2),
-            
+            nn.MaxPool2d(2),
+
+            # Block 3
             nn.Conv2d(64, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, 2),
-            
+            nn.MaxPool2d(2),
+
+            # Block 4 (full version - larger model)
             nn.Conv2d(128, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
             nn.AdaptiveAvgPool2d((1, 1))
         )
-        
+
         self.fc = nn.Linear(256, embed_size)
-        
-    def forward(self, images):
-        features = self.cnn(images)
+
+    def forward(self, x):
+        features = self.cnn(x)
         features = features.view(features.size(0), -1)
         features = self.fc(features)
         return features
 
 
-class RNNDecoder(nn.Module):
-    """RNN decoder for caption generation."""
-    
-    def __init__(self, embed_size=256, hidden_size=256, vocab_size=VOCAB_SIZE):
-        super(RNNDecoder, self).__init__()
-        
-        self.embed = nn.Embedding(vocab_size, embed_size)
-        self.rnn = nn.RNN(embed_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, vocab_size)
-        
-    def forward(self, features, captions):
-        embeddings = self.embed(captions)
-        embeddings = torch.cat([features.unsqueeze(1), embeddings], dim=1)
-        
-        hiddens, _ = self.rnn(embeddings)
-        outputs = self.fc(hiddens)
-        
-        # Remove the first timestep (corresponding to image features)
-        return outputs[:, 1:, :]
-
-
 class LSTMDecoder(nn.Module):
-    """LSTM decoder for caption generation."""
-    
-    def __init__(self, embed_size=256, hidden_size=256, vocab_size=VOCAB_SIZE):
+    """LSTM decoder for caption generation (larger hidden size for full version)."""
+
+    def __init__(self, embed_size=256, hidden_size=512, vocab_size=8000, num_layers=1):
         super(LSTMDecoder, self).__init__()
-        
-        self.embed = nn.Embedding(vocab_size, embed_size)
-        self.lstm = nn.LSTM(embed_size, hidden_size, batch_first=True)
+
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.vocab_size = vocab_size
+
+        self.embedding = nn.Embedding(vocab_size, embed_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, vocab_size)
-        
+
     def forward(self, features, captions):
-        embeddings = self.embed(captions)
-        embeddings = torch.cat([features.unsqueeze(1), embeddings], dim=1)
-        
-        hiddens, _ = self.lstm(embeddings)
-        outputs = self.fc(hiddens)
-        
-        # Remove the first timestep (corresponding to image features)
-        return outputs[:, 1:, :]
+        # features: [batch, embed_size]
+        # captions: [batch, seq_len]
+
+        # Embed captions
+        embeddings = self.embedding(captions)  # [batch, seq_len, embed_size]
+
+        # Prepend image features
+        features = features.unsqueeze(1)  # [batch, 1, embed_size]
+        embeddings = torch.cat([features, embeddings[:, :-1, :]], dim=1)
+
+        # LSTM
+        lstm_out, _ = self.lstm(embeddings)
+
+        # Predict
+        outputs = self.fc(lstm_out)
+
+        return outputs
 
 
-def train_model(encoder, decoder, train_loader, val_loader, num_epochs=30, model_name="Model"):
+class ImageCaptioningModel(nn.Module):
+    """Combined encoder-decoder model."""
+
+    def __init__(self, embed_size=256, hidden_size=512, vocab_size=8000):
+        super(ImageCaptioningModel, self).__init__()
+
+        self.encoder = CNNEncoder(embed_size)
+        self.decoder = LSTMDecoder(embed_size, hidden_size, vocab_size)
+
+    def forward(self, images, captions):
+        features = self.encoder(images)
+        outputs = self.decoder(features, captions)
+        return outputs
+
+
+def train_model(model, train_loader, num_epochs, device, pad_idx):
     """Train the captioning model."""
-    criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)
-    params = list(encoder.parameters()) + list(decoder.parameters())
-    optimizer = optim.Adam(params, lr=0.001)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3)
-    
-    history = {'train_loss': [], 'val_loss': []}
-    
-    print(f"\nTraining {model_name}...")
-    print("-" * 60)
-    
-    best_val_loss = float('inf')
-    
+    model = model.to(device)
+    criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
+
+    history = {'loss': []}
+
+    print("\nTraining Image Captioning Model...")
     for epoch in range(num_epochs):
-        # Training
-        encoder.train()
-        decoder.train()
-        train_loss = 0.0
-        
-        train_pbar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} [Train]', leave=False)
-        for images, captions in train_pbar:
+        model.train()
+        epoch_loss = 0
+
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")
+        for images, captions in pbar:
             images = images.to(device)
             captions = captions.to(device)
-            
-            # Forward pass
-            features = encoder(images)
-            outputs = decoder(features, captions[:, :-1])
-            
-            # Calculate loss
-            loss = criterion(
-                outputs.reshape(-1, VOCAB_SIZE),
-                captions[:, 1:].reshape(-1)
-            )
-            
-            # Backward pass
+
             optimizer.zero_grad()
+
+            outputs = model(images, captions)
+
+            # Reshape for loss computation
+            outputs = outputs.view(-1, outputs.size(-1))
+            targets = captions.view(-1)
+
+            loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
-            
-            train_loss += loss.item()
-            train_pbar.set_postfix({'loss': f'{loss.item():.4f}'})
-        
-        train_loss /= len(train_loader)
-        
-        # Validation
-        encoder.eval()
-        decoder.eval()
-        val_loss = 0.0
-        
-        with torch.no_grad():
-            val_pbar = tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} [Val]', leave=False)
-            for images, captions in val_pbar:
-                images = images.to(device)
-                captions = captions.to(device)
-                
-                features = encoder(images)
-                outputs = decoder(features, captions[:, :-1])
-                
-                loss = criterion(
-                    outputs.reshape(-1, VOCAB_SIZE),
-                    captions[:, 1:].reshape(-1)
-                )
-                
-                val_loss += loss.item()
-                val_pbar.set_postfix({'loss': f'{loss.item():.4f}'})
-        
-        val_loss /= len(val_loader)
-        
-        scheduler.step(val_loss)
-        
-        history['train_loss'].append(train_loss)
-        history['val_loss'].append(val_loss)
-        
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save({
-                'encoder': encoder.state_dict(),
-                'decoder': decoder.state_dict()
-            }, OUTPUT_DIR / f'{model_name.lower().replace(" ", "_")}_best.pth')
-        
-        print(f"Epoch [{epoch+1}/{num_epochs}] - "
-              f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
-    
-    print(f"SUCCESS: {model_name} training complete!")
+
+            epoch_loss += loss.item()
+            pbar.set_postfix({'loss': f'{loss.item():.4f}'})
+
+        scheduler.step()
+
+        avg_loss = epoch_loss / len(train_loader)
+        history['loss'].append(avg_loss)
+
+        print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}")
+
     return history
 
 
-def generate_caption(encoder, decoder, image, max_length=10):
+def generate_caption(model, image, dataset, device, max_length=20):
     """Generate caption for an image."""
-    encoder.eval()
-    decoder.eval()
-    
+    model.eval()
+
     with torch.no_grad():
-        features = encoder(image.unsqueeze(0).to(device))
-        
-        caption = [START_IDX]
-        
+        # Encode image
+        image = image.unsqueeze(0).to(device)
+        features = model.encoder(image)
+
+        # Start with START token
+        caption = [dataset.start_idx]
+
         for _ in range(max_length):
             caption_tensor = torch.LongTensor([caption]).to(device)
-            outputs = decoder(features, caption_tensor)
-            
-            predicted = outputs[0, -1].argmax().item()
+            outputs = model.decoder(features, caption_tensor)
+
+            # Get last prediction
+            predicted = outputs[0, -1, :].argmax().item()
             caption.append(predicted)
-            
-            if predicted == END_IDX:
+
+            if predicted == dataset.end_idx:
                 break
-        
+
         # Convert to words
-        words = [IDX_TO_WORD.get(idx, '<UNK>') for idx in caption]
-        
-        # Remove special tokens
-        words = [w for w in words if w not in ['<START>', '<END>', '<PAD>']]
-        
+        words = []
+        for idx in caption[1:-1]:  # Skip START and END
+            if idx in dataset.idx_to_word:
+                word = dataset.idx_to_word[idx]
+                if word not in [PAD_TOKEN, START_TOKEN, END_TOKEN]:
+                    words.append(word)
+
         return ' '.join(words)
 
 
-def visualize_captions(encoder, decoder, dataset, num_samples=6, model_name="Model"):
+def visualize_captions(model, dataset, device, num_samples=4):
     """Visualize generated captions."""
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-    axes = axes.flatten()
-    
-    for i in range(num_samples):
-        image, gt_caption = dataset[i]
-        
+    model.eval()
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+    axes = axes.ravel()
+
+    indices = random.sample(range(len(dataset)), num_samples)
+
+    for idx, ax in zip(indices, axes):
+        img, caption_indices = dataset[idx]
+
         # Generate caption
-        pred_caption = generate_caption(encoder, decoder, image)
-        
-        # Ground truth caption
-        gt_words = [IDX_TO_WORD.get(idx.item(), '<UNK>') for idx in gt_caption]
-        gt_words = [w for w in gt_words if w not in ['<START>', '<END>', '<PAD>']]
-        gt_text = ' '.join(gt_words)
-        
+        generated = generate_caption(model, img, dataset, device)
+
+        # Get ground truth
+        gt_words = []
+        for idx_val in caption_indices.numpy():
+            if idx_val in dataset.idx_to_word:
+                word = dataset.idx_to_word[idx_val]
+                if word not in [PAD_TOKEN, START_TOKEN, END_TOKEN]:
+                    gt_words.append(word)
+        gt_caption = ' '.join(gt_words)
+
         # Display
-        axes[i].imshow(image.permute(1, 2, 0).numpy())
-        axes[i].set_title(f'GT: {gt_text}\nPred: {pred_caption}', fontsize=9)
-        axes[i].axis('off')
-    
-    plt.suptitle(f'{model_name} - Caption Generation', fontsize=14, fontweight='bold')
+        img_display = img.permute(1, 2, 0).numpy()
+        ax.imshow(img_display)
+        ax.axis('off')
+        ax.set_title(f'Generated: {generated}\n\nGround Truth: {gt_caption}',
+                    fontsize=8, wrap=True)
+
     plt.tight_layout()
-    output_path = OUTPUT_DIR / f'{model_name.lower().replace(" ", "_")}_captions.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'caption_results.png', dpi=150, bbox_inches='tight')
+    print(f"Saved caption visualization to {OUTPUT_DIR / 'caption_results.png'}")
     plt.close()
-    
-    return output_path
 
 
-def plot_training_comparison(histories, model_names):
-    """Plot training comparison."""
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    
-    for history, name in zip(histories, model_names):
-        axes[0].plot(history['train_loss'], label=f'{name} Train', linewidth=2)
-        axes[1].plot(history['val_loss'], label=f'{name} Val', linewidth=2)
-    
-    axes[0].set_xlabel('Epoch')
-    axes[0].set_ylabel('Loss')
-    axes[0].set_title('Training Loss', fontweight='bold')
-    axes[0].legend()
-    axes[0].grid(alpha=0.3)
-    
-    axes[1].set_xlabel('Epoch')
-    axes[1].set_ylabel('Loss')
-    axes[1].set_title('Validation Loss', fontweight='bold')
-    axes[1].legend()
-    axes[1].grid(alpha=0.3)
-    
+def plot_training_history(history):
+    """Plot training history."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(history['loss'], 'b-', label='Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training Loss Over Time')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    output_path = OUTPUT_DIR / 'training_comparison.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'training_history.png', dpi=150, bbox_inches='tight')
+    print(f"Saved training history to {OUTPUT_DIR / 'training_history.png'}")
     plt.close()
-    
-    return output_path
 
 
 def main():
-    """Main function."""
-    print("=" * 70)
-    print("Lab 7: Image Captioning with RNN and LSTM")
-    print("=" * 70)
-    print()
-    print(f"Device: {device}")
-    print()
-    
-    # Create datasets
-    print("Creating synthetic caption dataset...")
-    train_dataset = SyntheticCaptionDataset(num_samples=800, img_size=64)
-    val_dataset = SyntheticCaptionDataset(num_samples=200, img_size=64)
-    
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-    
-    print(f"  • Training samples: {len(train_dataset)}")
-    print(f"  • Validation samples: {len(val_dataset)}")
-    print(f"  • Vocabulary size: {VOCAB_SIZE}")
-    print(f"  • Max caption length: 10")
-    print()
-    
-    # Train RNN model
-    print("=" * 70)
-    print("Training Vanilla RNN Model")
-    print("=" * 70)
-    
-    rnn_encoder = CNNEncoder(embed_size=256).to(device)
-    rnn_decoder = RNNDecoder(embed_size=256, hidden_size=256).to(device)
-    
+    print("=" * 60)
+    print("Lab 7: Image Captioning with Flickr8k (FULL VERSION)")
+    print("=" * 60)
+
     start_time = time.time()
-    rnn_history = train_model(rnn_encoder, rnn_decoder, train_loader, val_loader, 
-                              num_epochs=30, model_name="RNN")
-    rnn_time = time.time() - start_time
-    
-    # Train LSTM model
-    print()
-    print("=" * 70)
-    print("Training LSTM Model")
-    print("=" * 70)
-    
-    lstm_encoder = CNNEncoder(embed_size=256).to(device)
-    lstm_decoder = LSTMDecoder(embed_size=256, hidden_size=256).to(device)
-    
-    start_time = time.time()
-    lstm_history = train_model(lstm_encoder, lstm_decoder, train_loader, val_loader,
-                               num_epochs=30, model_name="LSTM")
-    lstm_time = time.time() - start_time
-    
-    print()
-    print("=" * 70)
-    print("Training Summary")
-    print("=" * 70)
-    print(f"RNN Model:")
-    print(f"  • Training time: {rnn_time:.2f}s")
-    print(f"  • Final train loss: {rnn_history['train_loss'][-1]:.4f}")
-    print(f"  • Final val loss: {rnn_history['val_loss'][-1]:.4f}")
-    print()
-    print(f"LSTM Model:")
-    print(f"  • Training time: {lstm_time:.2f}s")
-    print(f"  • Final train loss: {lstm_history['train_loss'][-1]:.4f}")
-    print(f"  • Final val loss: {lstm_history['val_loss'][-1]:.4f}")
-    print()
-    
-    # Visualize results
-    print("Generating visualizations...")
-    rnn_vis = visualize_captions(rnn_encoder, rnn_decoder, val_dataset, 6, "RNN")
-    lstm_vis = visualize_captions(lstm_encoder, lstm_decoder, val_dataset, 6, "LSTM")
-    
-    print(f"  SUCCESS: RNN captions: {rnn_vis}")
-    print(f"  SUCCESS: LSTM captions: {lstm_vis}")
-    
-    comparison_plot = plot_training_comparison(
-        [rnn_history, lstm_history],
-        ['RNN', 'LSTM']
+
+    # Check if dataset exists
+    data_root = Path("data/flickr8k")
+    if not data_root.exists():
+        print(f"\nError: Flickr8k dataset not found at {data_root}")
+        print("Please ensure the dataset is downloaded.")
+        return
+
+    # Load dataset
+    print(f"\nLoading Flickr8k dataset (max {NUM_SAMPLES} samples, img_size={IMG_SIZE}x{IMG_SIZE})...")
+    dataset = Flickr8kDataset(
+        data_root=data_root,
+        img_size=IMG_SIZE,
+        max_samples=NUM_SAMPLES,
+        max_caption_len=MAX_CAPTION_LEN
     )
-    print(f"  SUCCESS: Training comparison: {comparison_plot}")
-    print()
-    
-    print("=" * 70)
-    print("Lab 7 Complete!")
-    print("=" * 70)
-    print()
-    print("Key Findings:")
-    print("  • LSTM typically performs better than vanilla RNN")
-    print("  • LSTM handles long-term dependencies better")
-    print("  • Attention mechanism further improves performance")
-    print("  • Real systems use pre-trained CNNs (ResNet, VGG)")
-    print()
+
+    train_loader = DataLoader(
+        dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        num_workers=0
+    )
+
+    # Create model
+    print("\nCreating Image Captioning Model (embed=256, hidden=512)...")
+    model = ImageCaptioningModel(
+        embed_size=EMBED_SIZE,
+        hidden_size=HIDDEN_SIZE,
+        vocab_size=len(dataset.vocab)
+    )
+    print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+
+    # Train model
+    history = train_model(model, train_loader, NUM_EPOCHS, device, dataset.pad_idx)
+
+    # Plot training history
+    plot_training_history(history)
+
+    # Visualize results
+    print("\nGenerating caption visualizations...")
+    visualize_captions(model, dataset, device, num_samples=4)
+
+    elapsed_time = time.time() - start_time
+    print(f"\n{'='*60}")
+    print(f"Total execution time: {elapsed_time:.2f} seconds ({elapsed_time/60:.2f} minutes)")
+    print(f"{'='*60}")
+    print(f"\nOutputs saved to: {OUTPUT_DIR.absolute()}")
+    print("\nLab 7 completed successfully!")
 
 
 if __name__ == "__main__":
     main()
-
-

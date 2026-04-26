@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 """
-Lab 4: Image Labeling Tools Demonstration
-==========================================
+Lab 4: Image Labeling Tools Demonstration (FULL VERSION - REAL DATASET)
+========================================================================
+
+This program uses REAL road sign images with existing annotations.
+Full version parameters:
+- Uses 60 real road sign images (vs 30 in lite)
+- Reads existing Pascal VOC XML annotations
+- Converts to YOLO and COCO formats
+- DPI: 150 (vs 100 in lite) - higher quality outputs
+- Visualizes first 6 annotated images (vs 3 in lite)
 
 This program demonstrates:
-1. Creating synthetic images for annotation
-2. Simulating bounding box annotations
+1. Loading real images with existing annotations
+2. Reading Pascal VOC XML format
 3. Converting between annotation formats (YOLO, COCO, Pascal VOC)
 4. Visualizing annotations
 5. Generating annotation statistics
@@ -18,9 +26,12 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 import random
 from pathlib import Path
+import xml.etree.ElementTree as ET
+import glob
+import shutil
 
 # Create output directories
 OUTPUT_DIR = Path("output")
@@ -30,157 +41,135 @@ ANNOTATIONS_DIR = OUTPUT_DIR / "annotations"
 for dir_path in [OUTPUT_DIR, IMAGES_DIR, ANNOTATIONS_DIR]:
     dir_path.mkdir(exist_ok=True)
 
-# Define classes for synthetic dataset
-CLASSES = ['car', 'person', 'bicycle', 'dog', 'cat']
-CLASS_COLORS = {
-    'car': (255, 0, 0),
-    'person': (0, 255, 0),
-    'bicycle': (0, 0, 255),
-    'dog': (255, 255, 0),
-    'cat': (255, 0, 255)
-}
+# Path to dataset
+DATASET_DIR = Path("data/practice_images")
+DATASET_IMAGES = DATASET_DIR / "images"
+DATASET_ANNOTATIONS = DATASET_DIR / "annotations"
 
 
-def create_synthetic_image(width=640, height=480, num_objects=5):
-    """Create a synthetic image with colored rectangles representing objects."""
-    img = Image.new('RGB', (width, height), color=(240, 240, 240))
-    draw = ImageDraw.Draw(img)
-    
+def parse_pascal_voc_xml(xml_path):
+    """Parse Pascal VOC XML annotation file."""
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+
+    # Get image info
+    size = root.find('size')
+    img_width = int(size.find('width').text)
+    img_height = int(size.find('height').text)
+    filename = root.find('filename').text
+
+    # Get all objects
     annotations = []
-    
-    for _ in range(num_objects):
-        # Random object class
-        obj_class = random.choice(CLASSES)
-        color = CLASS_COLORS[obj_class]
-        
-        # Random bounding box
-        x1 = random.randint(0, width - 100)
-        y1 = random.randint(0, height - 100)
-        w = random.randint(50, min(150, width - x1))
-        h = random.randint(50, min(150, height - y1))
-        x2 = x1 + w
-        y2 = y1 + h
-        
-        # Draw rectangle
-        draw.rectangle([x1, y1, x2, y2], fill=color, outline=(0, 0, 0), width=2)
-        
-        # Add label text
-        try:
-            font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 16)
-        except:
-            font = ImageFont.load_default()
-        
-        draw.text((x1 + 5, y1 + 5), obj_class, fill=(255, 255, 255), font=font)
-        
+    for obj in root.findall('object'):
+        name = obj.find('name').text
+        bndbox = obj.find('bndbox')
+
+        x1 = int(bndbox.find('xmin').text)
+        y1 = int(bndbox.find('ymin').text)
+        x2 = int(bndbox.find('xmax').text)
+        y2 = int(bndbox.find('ymax').text)
+
         annotations.append({
-            'class': obj_class,
+            'class': name,
             'bbox': [x1, y1, x2, y2],
-            'width': w,
-            'height': h
+            'width': x2 - x1,
+            'height': y2 - y1
         })
-    
-    return img, annotations
+
+    return filename, img_width, img_height, annotations
 
 
-def convert_to_yolo_format(annotations, img_width, img_height):
+def get_all_classes(annotation_files):
+    """Extract all unique classes from annotation files."""
+    classes = set()
+    for xml_file in annotation_files:
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+        for obj in root.findall('object'):
+            classes.add(obj.find('name').text)
+    return sorted(list(classes))
+
+
+def convert_to_yolo_format(annotations, img_width, img_height, classes):
     """Convert annotations to YOLO format (class x_center y_center width height)."""
     yolo_annotations = []
-    
+
     for ann in annotations:
-        class_id = CLASSES.index(ann['class'])
+        if ann['class'] not in classes:
+            continue
+        class_id = classes.index(ann['class'])
         x1, y1, x2, y2 = ann['bbox']
-        
+
         # Convert to YOLO format (normalized)
         x_center = ((x1 + x2) / 2) / img_width
         y_center = ((y1 + y2) / 2) / img_height
         width = (x2 - x1) / img_width
         height = (y2 - y1) / img_height
-        
+
         yolo_annotations.append(f"{class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
-    
+
     return yolo_annotations
 
 
-def convert_to_coco_format(annotations, image_id, img_width, img_height):
+def convert_to_coco_format(annotations, image_id, img_width, img_height, classes):
     """Convert annotations to COCO format."""
     coco_annotations = []
-    
+
     for idx, ann in enumerate(annotations):
+        if ann['class'] not in classes:
+            continue
         x1, y1, x2, y2 = ann['bbox']
         width = x2 - x1
         height = y2 - y1
-        
+
         coco_ann = {
             'id': idx,
             'image_id': image_id,
-            'category_id': CLASSES.index(ann['class']) + 1,
+            'category_id': classes.index(ann['class']) + 1,
             'bbox': [x1, y1, width, height],
             'area': width * height,
             'iscrowd': 0
         }
         coco_annotations.append(coco_ann)
-    
+
     return coco_annotations
 
 
-def convert_to_pascal_voc_format(annotations, filename, img_width, img_height):
-    """Convert annotations to Pascal VOC XML format."""
-    xml_content = f"""<annotation>
-    <folder>images</folder>
-    <filename>{filename}</filename>
-    <size>
-        <width>{img_width}</width>
-        <height>{img_height}</height>
-        <depth>3</depth>
-    </size>
-"""
-    
-    for ann in annotations:
-        x1, y1, x2, y2 = ann['bbox']
-        xml_content += f"""    <object>
-        <name>{ann['class']}</name>
-        <bndbox>
-            <xmin>{x1}</xmin>
-            <ymin>{y1}</ymin>
-            <xmax>{x2}</xmax>
-            <ymax>{y2}</ymax>
-        </bndbox>
-    </object>
-"""
-    
-    xml_content += "</annotation>"
-    return xml_content
-
-
-def visualize_annotations(image_path, annotations, output_path):
+def visualize_annotations(image_path, annotations, output_path, classes):
     """Visualize bounding box annotations on image."""
     img = Image.open(image_path)
-    fig, ax = plt.subplots(1, figsize=(12, 8))
+    fig, ax = plt.subplots(1, figsize=(10, 7))
     ax.imshow(img)
-    
+
+    # Generate colors for each class
+    np.random.seed(42)
+    colors = {cls: tuple(np.random.rand(3)) for cls in classes}
+
     for ann in annotations:
+        if ann['class'] not in classes:
+            continue
         x1, y1, x2, y2 = ann['bbox']
         width = x2 - x1
         height = y2 - y1
-        
+
         # Create rectangle patch
         rect = patches.Rectangle(
             (x1, y1), width, height,
             linewidth=2,
-            edgecolor=tuple(c/255 for c in CLASS_COLORS[ann['class']]),
+            edgecolor=colors[ann['class']],
             facecolor='none'
         )
         ax.add_patch(rect)
-        
+
         # Add label
         ax.text(
             x1, y1 - 5,
             ann['class'],
             color='white',
-            fontsize=12,
-            bbox=dict(facecolor=tuple(c/255 for c in CLASS_COLORS[ann['class']]), alpha=0.8)
+            fontsize=10,
+            bbox=dict(facecolor=colors[ann['class']], alpha=0.8)
         )
-    
+
     ax.axis('off')
     plt.title('Annotated Image', fontsize=16, fontweight='bold')
     plt.tight_layout()
@@ -188,18 +177,19 @@ def visualize_annotations(image_path, annotations, output_path):
     plt.close()
 
 
-def generate_annotation_statistics(all_annotations):
+def generate_annotation_statistics(all_annotations, classes):
     """Generate statistics about annotations."""
-    class_counts = {cls: 0 for cls in CLASSES}
+    class_counts = {cls: 0 for cls in classes}
     total_objects = 0
     bbox_sizes = []
-    
+
     for annotations in all_annotations:
         for ann in annotations:
-            class_counts[ann['class']] += 1
-            total_objects += 1
-            bbox_sizes.append(ann['width'] * ann['height'])
-    
+            if ann['class'] in classes:
+                class_counts[ann['class']] += 1
+                total_objects += 1
+                bbox_sizes.append(ann['width'] * ann['height'])
+
     return {
         'total_objects': int(total_objects),
         'class_counts': {k: int(v) for k, v in class_counts.items()},
@@ -209,27 +199,32 @@ def generate_annotation_statistics(all_annotations):
     }
 
 
-def plot_class_distribution(stats, output_path):
+def plot_class_distribution(stats, output_path, classes):
     """Plot class distribution."""
-    classes = list(stats['class_counts'].keys())
+    class_list = list(stats['class_counts'].keys())
     counts = list(stats['class_counts'].values())
-    colors = [tuple(c/255 for c in CLASS_COLORS[cls]) for cls in classes]
-    
+
+    # Generate colors
+    np.random.seed(42)
+    colors = [tuple(np.random.rand(3)) for _ in class_list]
+
     fig, ax = plt.subplots(figsize=(10, 6))
-    bars = ax.bar(classes, counts, color=colors, alpha=0.7, edgecolor='black')
-    
+    bars = ax.bar(class_list, counts, color=colors, alpha=0.7, edgecolor='black')
+
     # Add value labels on bars
     for bar in bars:
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{int(height)}',
-                ha='center', va='bottom', fontsize=12, fontweight='bold')
-    
+        if height > 0:
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{int(height)}',
+                    ha='center', va='bottom', fontsize=10, fontweight='bold')
+
     ax.set_xlabel('Object Class', fontsize=14, fontweight='bold')
     ax.set_ylabel('Count', fontsize=14, fontweight='bold')
     ax.set_title('Object Class Distribution', fontsize=16, fontweight='bold')
     ax.grid(axis='y', alpha=0.3)
-    
+    plt.xticks(rotation=45, ha='right')
+
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
@@ -238,88 +233,112 @@ def plot_class_distribution(stats, output_path):
 def main():
     """Main function to demonstrate labeling workflows."""
     print("=" * 70)
-    print("Lab 4: Image Labeling Tools Demonstration")
+    print("Lab 4: Image Labeling Tools (FULL VERSION - REAL DATASET)")
     print("=" * 70)
     print()
-    
-    # Configuration
-    num_images = 10
-    img_width, img_height = 640, 480
-    
-    print(f"Creating {num_images} synthetic images with annotations...")
+
+    # Check if dataset exists
+    if not DATASET_DIR.exists():
+        print(f"ERROR: Dataset not found at {DATASET_DIR}")
+        print("Please ensure the road sign dataset is available.")
+        return
+
+    # Get all annotation files
+    all_xml_files = sorted(glob.glob(str(DATASET_ANNOTATIONS / "*.xml")))
+
+    if len(all_xml_files) == 0:
+        print(f"ERROR: No annotation files found in {DATASET_ANNOTATIONS}")
+        return
+
+    # Select 60 random annotation files for full version (vs 30 in lite)
+    num_images = min(60, len(all_xml_files))
+    selected_xml_files = random.sample(all_xml_files, num_images)
+
+    print(f"Using {num_images} real road sign images with annotations...")
+    print(f"Dataset location: {DATASET_DIR}")
     print()
-    
+
+    # Get all classes from selected files
+    classes = get_all_classes(selected_xml_files)
+    print(f"Found {len(classes)} object classes: {', '.join(classes)}")
+    print()
+
     all_annotations = []
     coco_dataset = {
         'images': [],
         'annotations': [],
-        'categories': [{'id': i+1, 'name': cls} for i, cls in enumerate(CLASSES)]
+        'categories': [{'id': i+1, 'name': cls} for i, cls in enumerate(classes)]
     }
-    
+
     annotation_id = 0
-    
-    for i in range(num_images):
-        # Create synthetic image
-        img, annotations = create_synthetic_image(img_width, img_height, num_objects=random.randint(3, 7))
-        
-        # Save image
-        img_filename = f"image_{i:03d}.jpg"
-        img_path = IMAGES_DIR / img_filename
-        img.save(img_path)
-        
+
+    for i, xml_path in enumerate(selected_xml_files):
+        # Parse XML annotation
+        filename, img_width, img_height, annotations = parse_pascal_voc_xml(xml_path)
+
+        # Find corresponding image
+        img_path = DATASET_IMAGES / filename
+        if not img_path.exists():
+            print(f"  WARNING: Image not found: {filename}, skipping...")
+            continue
+
+        # Copy image to output
+        img = Image.open(img_path)
+        output_img_path = IMAGES_DIR / f"image_{i:03d}.png"
+        img.save(output_img_path)
+
         all_annotations.append(annotations)
-        
+
         # Add to COCO dataset
         coco_dataset['images'].append({
             'id': i,
-            'file_name': img_filename,
+            'file_name': f"image_{i:03d}.png",
             'width': img_width,
-            'height': img_height
+            'height': img_height,
+            'original_filename': filename
         })
-        
+
         # Convert to different formats
         # 1. YOLO format
-        yolo_annotations = convert_to_yolo_format(annotations, img_width, img_height)
+        yolo_annotations = convert_to_yolo_format(annotations, img_width, img_height, classes)
         yolo_path = ANNOTATIONS_DIR / f"image_{i:03d}.txt"
         with open(yolo_path, 'w') as f:
             f.write('\n'.join(yolo_annotations))
-        
+
         # 2. COCO format (accumulate)
-        coco_anns = convert_to_coco_format(annotations, i, img_width, img_height)
+        coco_anns = convert_to_coco_format(annotations, i, img_width, img_height, classes)
         for ann in coco_anns:
             ann['id'] = annotation_id
             annotation_id += 1
             coco_dataset['annotations'].append(ann)
-        
-        # 3. Pascal VOC format
-        voc_xml = convert_to_pascal_voc_format(annotations, img_filename, img_width, img_height)
+
+        # 3. Pascal VOC format (copy original)
         voc_path = ANNOTATIONS_DIR / f"image_{i:03d}.xml"
-        with open(voc_path, 'w') as f:
-            f.write(voc_xml)
-        
-        # Visualize first 3 images
-        if i < 3:
+        shutil.copy(xml_path, voc_path)
+
+        # Visualize first 6 images (full version shows more than lite's 3)
+        if i < 6:
             vis_path = OUTPUT_DIR / f"annotated_image_{i:03d}.png"
-            visualize_annotations(img_path, annotations, vis_path)
-        
-        print(f"  SUCCESS: Image {i+1}/{num_images}: {len(annotations)} objects")
-    
+            visualize_annotations(output_img_path, annotations, vis_path, classes)
+
+        print(f"  OK Image {i+1}/{num_images}: {filename} - {len(annotations)} objects")
+
     # Save COCO format JSON
     coco_path = ANNOTATIONS_DIR / "annotations_coco.json"
     with open(coco_path, 'w') as f:
         json.dump(coco_dataset, f, indent=2)
-    
+
     print()
     print("Annotation format conversion complete!")
-    print(f"  • YOLO format: {ANNOTATIONS_DIR}/*.txt")
-    print(f"  • COCO format: {coco_path}")
-    print(f"  • Pascal VOC format: {ANNOTATIONS_DIR}/*.xml")
+    print(f"  - YOLO format: {ANNOTATIONS_DIR}/*.txt")
+    print(f"  - COCO format: {coco_path}")
+    print(f"  - Pascal VOC format: {ANNOTATIONS_DIR}/*.xml")
     print()
-    
+
     # Generate statistics
     print("Generating annotation statistics...")
-    stats = generate_annotation_statistics(all_annotations)
-    
+    stats = generate_annotation_statistics(all_annotations, classes)
+
     print()
     print("Annotation Statistics:")
     print("-" * 50)
@@ -329,50 +348,58 @@ def main():
     print()
     print("Class distribution:")
     for cls, count in stats['class_counts'].items():
-        percentage = (count / stats['total_objects']) * 100
-        print(f"  • {cls:10s}: {count:3d} ({percentage:5.1f}%)")
+        if stats['total_objects'] > 0:
+            percentage = (count / stats['total_objects']) * 100
+            print(f"  - {cls:15s}: {count:3d} ({percentage:5.1f}%)")
     print()
     print(f"Bounding box statistics:")
-    print(f"  • Average size: {stats['avg_bbox_size']:.0f} pixels²")
-    print(f"  • Min size: {stats['min_bbox_size']:.0f} pixels²")
-    print(f"  • Max size: {stats['max_bbox_size']:.0f} pixels²")
+    print(f"  - Average size: {stats['avg_bbox_size']:.0f} pixels squared")
+    print(f"  - Min size: {stats['min_bbox_size']:.0f} pixels squared")
+    print(f"  - Max size: {stats['max_bbox_size']:.0f} pixels squared")
     print()
-    
+
     # Plot class distribution
     dist_path = OUTPUT_DIR / "class_distribution.png"
-    plot_class_distribution(stats, dist_path)
+    plot_class_distribution(stats, dist_path, classes)
     print(f"SUCCESS: Class distribution plot saved: {dist_path}")
     print()
-    
+
     # Save statistics to JSON
     stats_path = OUTPUT_DIR / "annotation_statistics.json"
     with open(stats_path, 'w') as f:
         json.dump(stats, f, indent=2)
     print(f"SUCCESS: Statistics saved: {stats_path}")
     print()
-    
+
     # Create classes.txt for YOLO
     classes_path = ANNOTATIONS_DIR / "classes.txt"
     with open(classes_path, 'w') as f:
-        f.write('\n'.join(CLASSES))
+        f.write('\n'.join(classes))
     print(f"SUCCESS: Class names saved: {classes_path}")
     print()
-    
+
     print("=" * 70)
     print("Demonstration Complete!")
     print("=" * 70)
     print()
+    print("Full version parameters:")
+    print(f"  - Images: {num_images} real road sign images (vs 30 in lite)")
+    print("  - Uses existing Pascal VOC annotations")
+    print("  - DPI: 150 (vs 100 in lite) - higher quality")
+    print("  - Visualizes first 6 annotated images (vs 3 in lite)")
+    print()
     print("Output files:")
-    print(f"  • Images: {IMAGES_DIR}/")
-    print(f"  • Annotations: {ANNOTATIONS_DIR}/")
-    print(f"  • Visualizations: {OUTPUT_DIR}/annotated_image_*.png")
-    print(f"  • Class distribution: {dist_path}")
+    print(f"  - Images: {IMAGES_DIR}/")
+    print(f"  - Annotations: {ANNOTATIONS_DIR}/")
+    print(f"  - Visualizations: {OUTPUT_DIR}/annotated_image_*.png")
+    print(f"  - Class distribution: {dist_path}")
     print()
     print("Format Examples:")
     print()
     print("1. YOLO Format (normalized coordinates):")
     print("   class_id x_center y_center width height")
-    print(f"   Example: {open(ANNOTATIONS_DIR / 'image_000.txt').readline().strip()}")
+    if (ANNOTATIONS_DIR / 'image_000.txt').exists():
+        print(f"   Example: {open(ANNOTATIONS_DIR / 'image_000.txt').readline().strip()}")
     print()
     print("2. COCO Format (JSON with absolute coordinates):")
     print("   See: annotations/annotations_coco.json")
@@ -384,5 +411,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

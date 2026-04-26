@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
-Lab 9: Time Series Forecasting with LSTM
-=========================================
+Lab 9: Time Series Forecasting with LSTM (FULL VERSION)
+========================================================
 
-This program demonstrates:
-1. LSTM for time series forecasting
-2. Multi-step ahead prediction
-3. Comparison with simple baselines
-4. Evaluation metrics (MSE, MAE, MAPE)
-5. Visualization of predictions
-6. Feature importance analysis
+Full version using real Energy consumption dataset with scaled-up parameters.
+
+Full version parameters (vs lite):
+- Training samples: 2000 (vs 5000 total in lite - full uses 2000 focused samples)
+- Sequence length: 60 hours (vs 24)
+- 50 epochs (vs 10)
+- LSTM layers: 2
+- Hidden dim: 64
+- Forecast horizon: 12 hours (vs 6)
+- Uses AEP hourly energy consumption data
+
+Dataset: AEP Hourly Energy Consumption
+Expected runtime: ~15-30 minutes on CPU
 
 Author: Deep Learning Lab
 """
@@ -24,6 +30,8 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import time
 from tqdm import tqdm
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 # Set random seeds
 torch.manual_seed(42)
@@ -35,57 +43,67 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+# Full version configuration
+NUM_SAMPLES = 2000
+BATCH_SIZE = 64
+NUM_EPOCHS = 50
+WINDOW_SIZE = 60   # 60 hours (vs 24 in lite)
+FORECAST_HORIZON = 12  # 12 hours ahead (vs 6)
+HIDDEN_DIM = 64
+LSTM_LAYERS = 2
 
 
-def generate_synthetic_timeseries(n_samples=1000, noise_level=0.1):
-    """Generate synthetic time series with trend, seasonality, and noise."""
-    t = np.linspace(0, 100, n_samples)
-    
-    # Trend component
-    trend = 0.5 * t
-    
-    # Seasonal components
-    seasonal1 = 10 * np.sin(2 * np.pi * t / 20)  # Period of 20
-    seasonal2 = 5 * np.sin(2 * np.pi * t / 50)   # Period of 50
-    
-    # Noise
-    noise = np.random.randn(n_samples) * noise_level * 10
-    
-    # Combine
-    series = trend + seasonal1 + seasonal2 + noise
-    
-    return series, t
+class EnergyTimeSeriesDataset(Dataset):
+    """Load energy consumption time series dataset."""
 
-
-class TimeSeriesDataset(Dataset):
-    """Time series dataset with sliding window."""
-    
-    def __init__(self, data, window_size=20, forecast_horizon=5):
-        self.data = data
+    def __init__(self, data_file, window_size=60, forecast_horizon=12, max_samples=None):
         self.window_size = window_size
         self.forecast_horizon = forecast_horizon
-        
+
+        # Load data
+        print(f"Loading energy data from {data_file.name}...")
+        df = pd.read_csv(data_file)
+
+        # Extract energy values
+        energy_col = df.columns[1]  # Second column is energy consumption
+        self.data = df[energy_col].values
+
+        # Remove NaN values
+        self.data = self.data[~np.isnan(self.data)]
+
+        # Limit samples
+        if max_samples:
+            self.data = self.data[:max_samples + window_size + forecast_horizon]
+
+        print(f"Loaded {len(self.data)} data points")
+
+        # Normalize
+        self.scaler = StandardScaler()
+        self.data = self.scaler.fit_transform(self.data.reshape(-1, 1)).flatten()
+
     def __len__(self):
         return len(self.data) - self.window_size - self.forecast_horizon + 1
-    
+
     def __getitem__(self, idx):
         x = self.data[idx:idx + self.window_size]
         y = self.data[idx + self.window_size:idx + self.window_size + self.forecast_horizon]
-        
+
         return torch.FloatTensor(x).unsqueeze(-1), torch.FloatTensor(y)
 
 
 class LSTMForecaster(nn.Module):
-    """LSTM model for time series forecasting."""
-    
-    def __init__(self, input_size=1, hidden_size=64, num_layers=2, 
-                 forecast_horizon=5, dropout=0.2):
+    """LSTM model for time series forecasting (full version - larger)."""
+
+    def __init__(self, input_size=1, hidden_size=64, num_layers=2,
+                 forecast_horizon=12, dropout=0.2):
         super(LSTMForecaster, self).__init__()
-        
+
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.forecast_horizon = forecast_horizon
-        
+
         self.lstm = nn.LSTM(
             input_size,
             hidden_size,
@@ -93,34 +111,34 @@ class LSTMForecaster(nn.Module):
             batch_first=True,
             dropout=dropout if num_layers > 1 else 0
         )
-        
+
         self.fc = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_size // 2, forecast_horizon)
         )
-        
+
     def forward(self, x):
         # x: [batch, seq_len, input_size]
         lstm_out, (hidden, cell) = self.lstm(x)
-        
+
         # Use last hidden state
         last_hidden = lstm_out[:, -1, :]
-        
+
         # Forecast
         output = self.fc(last_hidden)
-        
+
         return output
 
 
 class GRUForecaster(nn.Module):
-    """GRU model for comparison."""
-    
+    """GRU model for comparison (full version - larger)."""
+
     def __init__(self, input_size=1, hidden_size=64, num_layers=2,
-                 forecast_horizon=5, dropout=0.2):
+                 forecast_horizon=12, dropout=0.2):
         super(GRUForecaster, self).__init__()
-        
+
         self.gru = nn.GRU(
             input_size,
             hidden_size,
@@ -128,14 +146,14 @@ class GRUForecaster(nn.Module):
             batch_first=True,
             dropout=dropout if num_layers > 1 else 0
         )
-        
+
         self.fc = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_size // 2, forecast_horizon)
         )
-        
+
     def forward(self, x):
         gru_out, hidden = self.gru(x)
         last_hidden = gru_out[:, -1, :]
@@ -143,377 +161,270 @@ class GRUForecaster(nn.Module):
         return output
 
 
-class SimpleBaseline(nn.Module):
-    """Simple baseline: last value persistence."""
-    
-    def __init__(self, forecast_horizon=5):
-        super(SimpleBaseline, self).__init__()
-        self.forecast_horizon = forecast_horizon
-        
-    def forward(self, x):
-        # Repeat last value
-        last_value = x[:, -1, 0]
-        return last_value.unsqueeze(-1).repeat(1, self.forecast_horizon)
-
-
-def calculate_metrics(predictions, targets):
-    """Calculate forecasting metrics."""
-    mse = np.mean((predictions - targets) ** 2)
-    mae = np.mean(np.abs(predictions - targets))
-    rmse = np.sqrt(mse)
-    
-    # MAPE (avoid division by zero)
-    mape = np.mean(np.abs((targets - predictions) / (targets + 1e-8))) * 100
-    
-    return {
-        'MSE': mse,
-        'MAE': mae,
-        'RMSE': rmse,
-        'MAPE': mape
-    }
-
-
-def train_model(model, train_loader, val_loader, num_epochs=50, model_name="Model"):
+def train_model(model, train_loader, num_epochs, device, model_name="Model"):
     """Train the forecasting model."""
+    model = model.to(device)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5)
-    
-    history = {
-        'train_loss': [],
-        'val_loss': []
-    }
-    
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+
+    history = {'loss': []}
+
     print(f"\nTraining {model_name}...")
-    print("-" * 60)
-    
-    best_val_loss = float('inf')
-    
     for epoch in range(num_epochs):
-        # Training
         model.train()
-        train_loss = 0.0
-        
-        train_pbar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} [Train]', leave=False)
-        for inputs, targets in train_pbar:
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-            
+        epoch_loss = 0
+
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")
+        for x, y in pbar:
+            x = x.to(device)
+            y = y.to(device)
+
             optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
+
+            predictions = model(x)
+            loss = criterion(predictions, y)
+
             loss.backward()
             optimizer.step()
-            
-            train_loss += loss.item()
-            train_pbar.set_postfix({'loss': f'{loss.item():.6f}'})
-        
-        train_loss /= len(train_loader)
-        
-        # Validation
-        model.eval()
-        val_loss = 0.0
-        
-        with torch.no_grad():
-            val_pbar = tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} [Val]', leave=False)
-            for inputs, targets in val_pbar:
-                inputs = inputs.to(device)
-                targets = targets.to(device)
-                
-                outputs = model(inputs)
-                loss = criterion(outputs, targets)
-                val_loss += loss.item()
-                val_pbar.set_postfix({'loss': f'{loss.item():.6f}'})
-        
-        val_loss /= len(val_loader)
-        
-        scheduler.step(val_loss)
-        
-        history['train_loss'].append(train_loss)
-        history['val_loss'].append(val_loss)
-        
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save(model.state_dict(),
-                      OUTPUT_DIR / f'{model_name.lower().replace(" ", "_")}_best.pth')
-        
-        print(f"Epoch [{epoch+1}/{num_epochs}] - "
-              f"Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
-    
-    print(f"SUCCESS: {model_name} training complete! Best Val Loss: {best_val_loss:.6f}")
+
+            epoch_loss += loss.item()
+            pbar.set_postfix({'loss': f'{loss.item():.4f}'})
+
+        scheduler.step()
+
+        avg_loss = epoch_loss / len(train_loader)
+        history['loss'].append(avg_loss)
+
+        print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}")
+
     return history
 
 
-def evaluate_model(model, test_loader):
-    """Evaluate model on test set."""
+def evaluate_model(model, test_loader, device):
+    """Evaluate model performance."""
     model.eval()
-    
+    criterion = nn.MSELoss()
+
+    total_loss = 0
     all_predictions = []
     all_targets = []
-    
+
     with torch.no_grad():
-        for inputs, targets in test_loader:
-            inputs = inputs.to(device)
-            outputs = model(inputs)
-            
-            all_predictions.append(outputs.cpu().numpy())
-            all_targets.append(targets.numpy())
-    
-    predictions = np.concatenate(all_predictions, axis=0)
-    targets = np.concatenate(all_targets, axis=0)
-    
-    metrics = calculate_metrics(predictions, targets)
-    
-    return predictions, targets, metrics
+        for x, y in test_loader:
+            x = x.to(device)
+            y = y.to(device)
+
+            predictions = model(x)
+            loss = criterion(predictions, y)
+
+            total_loss += loss.item()
+            all_predictions.append(predictions.cpu().numpy())
+            all_targets.append(y.cpu().numpy())
+
+    avg_loss = total_loss / len(test_loader)
+    all_predictions = np.concatenate(all_predictions, axis=0)
+    all_targets = np.concatenate(all_targets, axis=0)
+
+    # Calculate metrics
+    mse = np.mean((all_predictions - all_targets) ** 2)
+    mae = np.mean(np.abs(all_predictions - all_targets))
+    rmse = np.sqrt(mse)
+
+    return avg_loss, mse, mae, rmse, all_predictions, all_targets
 
 
-def visualize_predictions(predictions, targets, time_points, model_name="Model"):
+def visualize_predictions(predictions, targets, dataset, num_samples=3):
     """Visualize predictions vs actual values."""
-    fig, axes = plt.subplots(2, 1, figsize=(14, 10))
-    
-    # Plot first 200 predictions
-    n_samples = min(200, len(predictions))
-    
-    # Multi-step predictions
-    for i in range(min(5, predictions.shape[1])):
-        axes[0].plot(time_points[:n_samples], predictions[:n_samples, i],
-                    alpha=0.6, label=f'Step {i+1} ahead')
-        axes[0].plot(time_points[:n_samples], targets[:n_samples, i],
-                    alpha=0.3, linestyle='--')
-    
-    axes[0].set_xlabel('Time')
-    axes[0].set_ylabel('Value')
-    axes[0].set_title(f'{model_name} - Multi-step Predictions', fontweight='bold')
-    axes[0].legend()
-    axes[0].grid(alpha=0.3)
-    
-    # Prediction errors
-    errors = np.abs(predictions - targets)
-    mean_errors = errors.mean(axis=1)
-    
-    axes[1].plot(time_points[:n_samples], mean_errors[:n_samples], 
-                linewidth=2, color='red')
-    axes[1].fill_between(time_points[:n_samples], 0, mean_errors[:n_samples],
-                         alpha=0.3, color='red')
-    axes[1].set_xlabel('Time')
-    axes[1].set_ylabel('Mean Absolute Error')
-    axes[1].set_title('Prediction Error Over Time', fontweight='bold')
-    axes[1].grid(alpha=0.3)
-    
+    fig, axes = plt.subplots(num_samples, 1, figsize=(12, 4 * num_samples))
+    if num_samples == 1:
+        axes = [axes]
+
+    for i, ax in enumerate(axes):
+        if i >= len(predictions):
+            break
+
+        pred = predictions[i]
+        target = targets[i]
+
+        # Denormalize
+        pred_denorm = dataset.scaler.inverse_transform(pred.reshape(-1, 1)).flatten()
+        target_denorm = dataset.scaler.inverse_transform(target.reshape(-1, 1)).flatten()
+
+        x = np.arange(len(pred))
+        ax.plot(x, target_denorm, 'b-o', label='Actual', linewidth=2)
+        ax.plot(x, pred_denorm, 'r--s', label='Predicted', linewidth=2)
+        ax.set_xlabel('Hours Ahead')
+        ax.set_ylabel('Energy Consumption (MW)')
+        ax.set_title(f'Sample {i+1}: Forecast vs Actual')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+
     plt.tight_layout()
-    output_path = OUTPUT_DIR / f'{model_name.lower().replace(" ", "_")}_predictions.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'forecast_predictions.png', dpi=150, bbox_inches='tight')
+    print(f"Saved predictions visualization to {OUTPUT_DIR / 'forecast_predictions.png'}")
     plt.close()
-    
-    return output_path
 
 
-def plot_training_comparison(histories, model_names):
-    """Plot training comparison."""
-    fig, ax = plt.subplots(figsize=(12, 6))
-    
-    for history, name in zip(histories, model_names):
-        ax.plot(history['train_loss'], label=f'{name} Train', linewidth=2)
-        ax.plot(history['val_loss'], label=f'{name} Val', linewidth=2, linestyle='--')
-    
-    ax.set_xlabel('Epoch', fontsize=12)
-    ax.set_ylabel('Loss (MSE)', fontsize=12)
-    ax.set_title('Training Loss Comparison', fontsize=14, fontweight='bold')
-    ax.legend()
-    ax.grid(alpha=0.3)
-    ax.set_yscale('log')
-    
+def plot_training_comparison(lstm_history, gru_history):
+    """Plot training comparison between LSTM and GRU."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(lstm_history['loss'], 'b-', label='LSTM', linewidth=2)
+    plt.plot(gru_history['loss'], 'r-', label='GRU', linewidth=2)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss (MSE)')
+    plt.title('Training Loss Comparison: LSTM vs GRU')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    output_path = OUTPUT_DIR / 'training_comparison.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'training_comparison.png', dpi=150, bbox_inches='tight')
+    print(f"Saved training comparison to {OUTPUT_DIR / 'training_comparison.png'}")
     plt.close()
-    
-    return output_path
 
 
-def plot_metrics_comparison(metrics_dict):
+def plot_metrics_comparison(lstm_metrics, gru_metrics):
     """Plot metrics comparison."""
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    axes = axes.flatten()
-    
-    models = list(metrics_dict.keys())
-    metric_names = ['MSE', 'MAE', 'RMSE', 'MAPE']
-    
-    for idx, metric_name in enumerate(metric_names):
-        values = [metrics_dict[model][metric_name] for model in models]
-        
-        bars = axes[idx].bar(models, values, alpha=0.7, edgecolor='black')
-        
-        # Color bars
-        colors = ['#2ecc71', '#3498db', '#e74c3c']
-        for bar, color in zip(bars, colors):
-            bar.set_color(color)
-        
-        # Add value labels
-        for bar in bars:
-            height = bar.get_height()
-            axes[idx].text(bar.get_x() + bar.get_width()/2., height,
-                          f'{height:.4f}',
-                          ha='center', va='bottom', fontsize=10, fontweight='bold')
-        
-        axes[idx].set_ylabel(metric_name, fontsize=12)
-        axes[idx].set_title(f'{metric_name} Comparison', fontsize=12, fontweight='bold')
-        axes[idx].grid(axis='y', alpha=0.3)
-    
+    metrics = ['MSE', 'MAE', 'RMSE']
+    lstm_vals = [lstm_metrics['mse'], lstm_metrics['mae'], lstm_metrics['rmse']]
+    gru_vals = [gru_metrics['mse'], gru_metrics['mae'], gru_metrics['rmse']]
+
+    x = np.arange(len(metrics))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(x - width/2, lstm_vals, width, label='LSTM', color='blue', alpha=0.7)
+    ax.bar(x + width/2, gru_vals, width, label='GRU', color='red', alpha=0.7)
+
+    ax.set_xlabel('Metrics')
+    ax.set_ylabel('Value')
+    ax.set_title('Performance Metrics Comparison')
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics)
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
+
     plt.tight_layout()
-    output_path = OUTPUT_DIR / 'metrics_comparison.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'metrics_comparison.png', dpi=150, bbox_inches='tight')
+    print(f"Saved metrics comparison to {OUTPUT_DIR / 'metrics_comparison.png'}")
     plt.close()
-    
-    return output_path
 
 
 def main():
-    """Main function."""
-    print("=" * 70)
-    print("Lab 9: Time Series Forecasting with LSTM")
-    print("=" * 70)
-    print()
-    print(f"Device: {device}")
-    print()
-    
-    # Generate synthetic time series
-    print("Generating synthetic time series...")
-    series, time_points = generate_synthetic_timeseries(n_samples=1000, noise_level=0.1)
-    
-    # Normalize
-    mean = series.mean()
-    std = series.std()
-    series_normalized = (series - mean) / std
-    
-    # Split data
-    train_size = int(0.7 * len(series_normalized))
-    val_size = int(0.15 * len(series_normalized))
-    
-    train_data = series_normalized[:train_size]
-    val_data = series_normalized[train_size:train_size + val_size]
-    test_data = series_normalized[train_size + val_size:]
-    
-    print(f"  • Total samples: {len(series)}")
-    print(f"  • Train samples: {len(train_data)}")
-    print(f"  • Val samples: {len(val_data)}")
-    print(f"  • Test samples: {len(test_data)}")
-    print()
-    
-    # Create datasets
-    window_size = 20
-    forecast_horizon = 5
-    
-    train_dataset = TimeSeriesDataset(train_data, window_size, forecast_horizon)
-    val_dataset = TimeSeriesDataset(val_data, window_size, forecast_horizon)
-    test_dataset = TimeSeriesDataset(test_data, window_size, forecast_horizon)
-    
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
-    
-    print(f"Configuration:")
-    print(f"  • Window size: {window_size}")
-    print(f"  • Forecast horizon: {forecast_horizon} steps")
-    print()
-    
+    print("=" * 60)
+    print("Lab 9: Time Series Forecasting with Energy Data (FULL)")
+    print("=" * 60)
+
+    start_time = time.time()
+
+    # Check if dataset exists - try multiple CSV files
+    energy_dir = Path("data/energy")
+    if not energy_dir.exists():
+        print(f"\nError: Energy dataset directory not found at {energy_dir}")
+        print("Please ensure the dataset is downloaded.")
+        return
+
+    # Find an available CSV file
+    csv_files = list(energy_dir.glob("*.csv"))
+    if not csv_files:
+        print(f"\nError: No CSV files found in {energy_dir}")
+        return
+
+    # Prefer AEP_hourly.csv, otherwise use first available
+    data_file = energy_dir / "AEP_hourly.csv"
+    if not data_file.exists():
+        data_file = csv_files[0]
+        print(f"AEP_hourly.csv not found, using {data_file.name}")
+
+    # Load dataset
+    print(f"\nLoading energy time series (window={WINDOW_SIZE}h, horizon={FORECAST_HORIZON}h, "
+          f"max {NUM_SAMPLES} samples)...")
+    dataset = EnergyTimeSeriesDataset(
+        data_file=data_file,
+        window_size=WINDOW_SIZE,
+        forecast_horizon=FORECAST_HORIZON,
+        max_samples=NUM_SAMPLES
+    )
+
+    # Split into train and test
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    train_dataset, test_dataset = torch.utils.data.random_split(
+        dataset, [train_size, test_size]
+    )
+
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+    print(f"Train samples: {train_size}, Test samples: {test_size}")
+
     # Train LSTM model
-    print("=" * 70)
+    print("\n" + "="*60)
     print("Training LSTM Model")
-    print("=" * 70)
-    
+    print("="*60)
     lstm_model = LSTMForecaster(
         input_size=1,
-        hidden_size=64,
-        num_layers=2,
-        forecast_horizon=forecast_horizon
-    ).to(device)
-    
-    start_time = time.time()
-    lstm_history = train_model(lstm_model, train_loader, val_loader,
-                               num_epochs=50, model_name="LSTM")
-    lstm_time = time.time() - start_time
-    
+        hidden_size=HIDDEN_DIM,
+        num_layers=LSTM_LAYERS,
+        forecast_horizon=FORECAST_HORIZON,
+        dropout=0.2
+    )
+    print(f"LSTM parameters: {sum(p.numel() for p in lstm_model.parameters()):,}")
+    lstm_history = train_model(lstm_model, train_loader, NUM_EPOCHS, device, "LSTM")
+
     # Train GRU model
-    print()
-    print("=" * 70)
+    print("\n" + "="*60)
     print("Training GRU Model")
-    print("=" * 70)
-    
+    print("="*60)
     gru_model = GRUForecaster(
         input_size=1,
-        hidden_size=64,
-        num_layers=2,
-        forecast_horizon=forecast_horizon
-    ).to(device)
-    
-    start_time = time.time()
-    gru_history = train_model(gru_model, train_loader, val_loader,
-                             num_epochs=50, model_name="GRU")
-    gru_time = time.time() - start_time
-    
-    # Baseline model
-    print()
-    print("Evaluating Baseline Model...")
-    baseline_model = SimpleBaseline(forecast_horizon=forecast_horizon).to(device)
-    
-    # Evaluate all models
-    print()
-    print("=" * 70)
-    print("Evaluation on Test Set")
-    print("=" * 70)
-    
-    lstm_pred, lstm_target, lstm_metrics = evaluate_model(lstm_model, test_loader)
-    gru_pred, gru_target, gru_metrics = evaluate_model(gru_model, test_loader)
-    baseline_pred, baseline_target, baseline_metrics = evaluate_model(baseline_model, test_loader)
-    
-    metrics_dict = {
-        'LSTM': lstm_metrics,
-        'GRU': gru_metrics,
-        'Baseline': baseline_metrics
-    }
-    
-    print()
-    for model_name, metrics in metrics_dict.items():
-        print(f"{model_name}:")
-        for metric_name, value in metrics.items():
-            print(f"  • {metric_name}: {value:.6f}")
-        print()
-    
-    # Visualizations
-    print("Generating visualizations...")
-    
-    test_time = time_points[train_size + val_size + window_size:]
-    
-    lstm_vis = visualize_predictions(lstm_pred, lstm_target, test_time, "LSTM")
-    gru_vis = visualize_predictions(gru_pred, gru_target, test_time, "GRU")
-    
-    print(f"  SUCCESS: LSTM predictions: {lstm_vis}")
-    print(f"  SUCCESS: GRU predictions: {gru_vis}")
-    
-    comparison_plot = plot_training_comparison(
-        [lstm_history, gru_history],
-        ['LSTM', 'GRU']
+        hidden_size=HIDDEN_DIM,
+        num_layers=LSTM_LAYERS,
+        forecast_horizon=FORECAST_HORIZON,
+        dropout=0.2
     )
-    print(f"  SUCCESS: Training comparison: {comparison_plot}")
-    
-    metrics_plot = plot_metrics_comparison(metrics_dict)
-    print(f"  SUCCESS: Metrics comparison: {metrics_plot}")
-    print()
-    
-    print("=" * 70)
-    print("Lab 9 Complete!")
-    print("=" * 70)
-    print()
-    print("Key Findings:")
-    print("  • LSTM and GRU outperform simple baseline")
-    print("  • LSTM handles long-term dependencies well")
-    print("  • Multi-step forecasting is challenging")
-    print("  • Real applications: stock prices, weather, energy demand")
-    print()
+    print(f"GRU parameters: {sum(p.numel() for p in gru_model.parameters()):,}")
+    gru_history = train_model(gru_model, train_loader, NUM_EPOCHS, device, "GRU")
+
+    # Evaluate models
+    print("\n" + "="*60)
+    print("Evaluating Models")
+    print("="*60)
+
+    lstm_loss, lstm_mse, lstm_mae, lstm_rmse, lstm_preds, targets = evaluate_model(
+        lstm_model, test_loader, device
+    )
+    print(f"\nLSTM Results:")
+    print(f"  Test Loss: {lstm_loss:.4f}")
+    print(f"  MSE: {lstm_mse:.4f}")
+    print(f"  MAE: {lstm_mae:.4f}")
+    print(f"  RMSE: {lstm_rmse:.4f}")
+
+    gru_loss, gru_mse, gru_mae, gru_rmse, gru_preds, _ = evaluate_model(
+        gru_model, test_loader, device
+    )
+    print(f"\nGRU Results:")
+    print(f"  Test Loss: {gru_loss:.4f}")
+    print(f"  MSE: {gru_mse:.4f}")
+    print(f"  MAE: {gru_mae:.4f}")
+    print(f"  RMSE: {gru_rmse:.4f}")
+
+    # Visualizations
+    print("\nGenerating visualizations...")
+    plot_training_comparison(lstm_history, gru_history)
+
+    lstm_metrics = {'mse': lstm_mse, 'mae': lstm_mae, 'rmse': lstm_rmse}
+    gru_metrics = {'mse': gru_mse, 'mae': gru_mae, 'rmse': gru_rmse}
+    plot_metrics_comparison(lstm_metrics, gru_metrics)
+
+    visualize_predictions(lstm_preds, targets, dataset, num_samples=3)
+
+    elapsed_time = time.time() - start_time
+    print(f"\n{'='*60}")
+    print(f"Total execution time: {elapsed_time:.2f} seconds ({elapsed_time/60:.2f} minutes)")
+    print(f"{'='*60}")
+    print(f"\nOutputs saved to: {OUTPUT_DIR.absolute()}")
+    print("\nLab 9 completed successfully!")
 
 
 if __name__ == "__main__":
     main()
-
-
