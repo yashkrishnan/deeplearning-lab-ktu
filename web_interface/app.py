@@ -93,73 +93,73 @@ LABS_CONFIG = {
         'category': 'full'
     },
     'lab_01_lite': {
-        'name': 'Image Processing (Lite)',
+        'name': 'Image Processing',
         'script': 'labs_lite/lab_01_image_processing/image_processing_lite.py',
         'output_dir': 'labs_lite/lab_01_image_processing/outputs',
-        'description': 'Lightweight version - Fast image processing operations',
+        'description': 'Fast image processing operations',
         'category': 'lite'
     },
     'lab_02_lite': {
-        'name': 'CIFAR-10 Classifiers (Lite)',
+        'name': 'CIFAR-10 Classifiers',
         'script': 'labs_lite/lab_02_cifar10_classifiers/cifar10_classifiers_lite.py',
         'output_dir': 'labs_lite/lab_02_cifar10_classifiers/outputs_lite',
-        'description': 'Lightweight version - 2-3x faster training with reduced dataset',
+        'description': '2-3x faster training with reduced dataset',
         'category': 'lite'
     },
     'lab_03_lite': {
-        'name': 'Batch Normalization & Dropout (Lite)',
+        'name': 'Batch Normalization & Dropout',
         'script': 'labs_lite/lab_03_batchnorm_dropout/batchnorm_dropout_study_lite.py',
         'output_dir': 'labs_lite/lab_03_batchnorm_dropout/outputs_lite',
-        'description': 'Lightweight version - Quick comparison of regularization techniques',
+        'description': 'Quick comparison of regularization techniques',
         'category': 'lite'
     },
     'lab_04_lite': {
-        'name': 'Image Labeling Tools (Lite)',
+        'name': 'Image Labeling Tools',
         'script': 'labs_lite/lab_04_labeling_tools/labeling_demo_lite.py',
         'output_dir': 'labs_lite/lab_04_labeling_tools/output',
-        'description': 'Lightweight version - Fast annotation demo',
+        'description': 'Fast annotation demo',
         'category': 'lite'
     },
     'lab_05_lite': {
-        'name': 'Image Segmentation (Lite)',
+        'name': 'Image Segmentation',
         'script': 'labs_lite/lab_05_segmentation/segmentation_demo_lite.py',
         'output_dir': 'labs_lite/lab_05_segmentation/output_lite',
-        'description': 'Lightweight version - Faster UNet training with smaller dataset',
+        'description': 'Faster UNet training with smaller dataset',
         'category': 'lite'
     },
     'lab_06_lite': {
-        'name': 'Object Detection (Lite)',
+        'name': 'Object Detection',
         'script': 'labs_lite/lab_06_object_detection/object_detection_demo_lite.py',
         'output_dir': 'labs_lite/lab_06_object_detection/output',
-        'description': 'Lightweight version - Fast YOLO-style detector',
+        'description': 'Fast YOLO-style detector',
         'category': 'lite'
     },
     'lab_07_lite': {
-        'name': 'Image Captioning (Lite)',
+        'name': 'Image Captioning',
         'script': 'labs_lite/lab_07_image_captioning/image_captioning_demo_lite.py',
         'output_dir': 'labs_lite/lab_07_image_captioning/output',
-        'description': 'Lightweight version - Quick RNN/LSTM captioning',
+        'description': 'Quick RNN/LSTM captioning',
         'category': 'lite'
     },
     'lab_08_lite': {
-        'name': 'Chatbot (Lite)',
+        'name': 'Chatbot',
         'script': 'labs_lite/lab_08_chatbot/chatbot_demo_lite.py',
         'output_dir': 'labs_lite/lab_08_chatbot/output',
-        'description': 'Lightweight version - Fast BiLSTM chatbot',
+        'description': 'Fast BiLSTM chatbot',
         'category': 'lite'
     },
     'lab_09_lite': {
-        'name': 'Time Series Forecasting (Lite)',
+        'name': 'Time Series Forecasting',
         'script': 'labs_lite/lab_09_time_series/time_series_demo_lite.py',
         'output_dir': 'labs_lite/lab_09_time_series/output',
-        'description': 'Lightweight version - Quick LSTM/GRU forecasting',
+        'description': 'Quick LSTM/GRU forecasting',
         'category': 'lite'
     },
     'lab_10_lite': {
-        'name': 'Sequence to Sequence (Lite)',
+        'name': 'Sequence to Sequence',
         'script': 'labs_lite/lab_10_seq2seq/seq2seq_demo_lite.py',
         'output_dir': 'labs_lite/lab_10_seq2seq/output',
-        'description': 'Lightweight version - Fast encoder-decoder with attention',
+        'description': 'Fast encoder-decoder with attention',
         'category': 'lite'
     }
 }
