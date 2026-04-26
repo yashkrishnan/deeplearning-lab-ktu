@@ -576,22 +576,22 @@ def run_setup_task(task_id):
             'interactive': False
         },
         'download-datasets': {
-            'command': 'bash download_datasets_interactive.sh',
-            'description': 'Downloading all datasets',
+            'command': f'{sys.executable} web_interface/download_datasets_smart.py',
+            'description': 'Downloading missing datasets',
             'interactive': False
         },
         'download-interactive': {
-            'command': 'bash download_datasets_interactive.sh',
+            'command': f'{sys.executable} web_interface/download_datasets_smart.py',
             'description': 'Interactive dataset download',
             'interactive': True
         },
         'run-all-full': {
-            'command': 'bash labs_full/run_all_labs.sh',
+            'command': f'{sys.executable} -u labs_full/run_all_labs.py',
             'description': 'Running all full labs',
             'interactive': False
         },
         'run-all-lite': {
-            'command': 'bash labs_lite/run_all_labs.sh',
+            'command': f'{sys.executable} -u labs_lite/run_all_labs.py',
             'description': 'Running all lite labs',
             'interactive': False
         }
@@ -624,6 +624,10 @@ def run_setup_task(task_id):
         # Run the command in the background
         def run_command():
             try:
+                import os as _os
+                _env = _os.environ.copy()
+                _env['PYTHONUNBUFFERED'] = '1'
+                _env['TQDM_DISABLE'] = '1'
                 process = subprocess.Popen(
                     task['command'],
                     shell=True,
@@ -631,7 +635,8 @@ def run_setup_task(task_id):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    bufsize=1
+                    bufsize=1,
+                    env=_env,
                 )
 
                 setup_task_processes[task_id] = process
