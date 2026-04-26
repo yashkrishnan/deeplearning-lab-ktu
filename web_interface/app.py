@@ -95,21 +95,21 @@ LABS_CONFIG = {
     'lab_01_lite': {
         'name': 'Image Processing',
         'script': 'labs_lite/lab_01_image_processing/image_processing_lite.py',
-        'output_dir': 'labs_lite/lab_01_image_processing/outputs',
+        'output_dir': 'labs_lite/lab_01_image_processing/output',
         'description': 'Fast image processing operations',
         'category': 'lite'
     },
     'lab_02_lite': {
         'name': 'CIFAR-10 Classifiers',
         'script': 'labs_lite/lab_02_cifar10_classifiers/cifar10_classifiers_lite.py',
-        'output_dir': 'labs_lite/lab_02_cifar10_classifiers/outputs_lite',
+        'output_dir': 'labs_lite/lab_02_cifar10_classifiers/output',
         'description': '2-3x faster training with reduced dataset',
         'category': 'lite'
     },
     'lab_03_lite': {
         'name': 'Batch Normalization & Dropout',
         'script': 'labs_lite/lab_03_batchnorm_dropout/batchnorm_dropout_study_lite.py',
-        'output_dir': 'labs_lite/lab_03_batchnorm_dropout/outputs_lite',
+        'output_dir': 'labs_lite/lab_03_batchnorm_dropout/output',
         'description': 'Quick comparison of regularization techniques',
         'category': 'lite'
     },
@@ -123,7 +123,7 @@ LABS_CONFIG = {
     'lab_05_lite': {
         'name': 'Image Segmentation',
         'script': 'labs_lite/lab_05_segmentation/segmentation_demo_lite.py',
-        'output_dir': 'labs_lite/lab_05_segmentation/output_lite',
+        'output_dir': 'labs_lite/lab_05_segmentation/output',
         'description': 'Faster UNet training with smaller dataset',
         'category': 'lite'
     },

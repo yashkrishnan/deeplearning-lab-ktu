@@ -398,8 +398,8 @@ def main():
     
     start_time = time.time()
     
-    # Check if dataset exists
-    data_file = Path("../../lab_10_seq2seq/data/translation/en-fr.csv")
+    # Check if dataset exists (in labs_lite directory)
+    data_file = Path("data/translation/en-fr.csv")
     if not data_file.exists():
         print(f"\nError: Translation dataset not found at {data_file}")
         print("Please ensure the dataset is downloaded.")

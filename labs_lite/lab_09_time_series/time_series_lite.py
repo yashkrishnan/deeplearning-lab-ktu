@@ -313,8 +313,8 @@ def main():
     
     start_time = time.time()
     
-    # Check if dataset exists
-    data_file = Path("../../lab_09_time_series/data/energy/AEP_hourly.csv")
+    # Check if dataset exists (in labs_lite directory)
+    data_file = Path("data/energy/AEP_hourly.csv")
     if not data_file.exists():
         print(f"\nError: Energy dataset not found at {data_file}")
         print("Please ensure the dataset is downloaded.")

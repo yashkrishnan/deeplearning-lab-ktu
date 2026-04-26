@@ -40,8 +40,8 @@ ANNOTATIONS_DIR = OUTPUT_DIR / "annotations"
 for dir_path in [OUTPUT_DIR, IMAGES_DIR, ANNOTATIONS_DIR]:
     dir_path.mkdir(exist_ok=True)
 
-# Path to dataset
-DATASET_DIR = Path("../../lab_04_labeling_tools/data/practice_images")
+# Path to dataset (in labs_lite directory)
+DATASET_DIR = Path("data/practice_images")
 DATASET_IMAGES = DATASET_DIR / "images"
 DATASET_ANNOTATIONS = DATASET_DIR / "annotations"
 

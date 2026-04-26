@@ -424,8 +424,8 @@ def main():
     
     start_time = time.time()
     
-    # Check if dataset exists
-    data_dir = Path("../../lab_05_segmentation/data/pets")
+    # Check if dataset exists (in labs_lite directory)
+    data_dir = Path("data/pets")
     if not data_dir.exists():
         print(f"\nError: Pet dataset not found at {data_dir}")
         print("Please ensure the dataset is downloaded.")

@@ -54,15 +54,45 @@ class ImageProcessor:
         self.output_dir.mkdir(exist_ok=True)
         print(f"✓ Output directory created: {self.output_dir}")
     
+    def create_synthetic_image(self):
+        """
+        Create a synthetic grayscale image for demonstration.
+        
+        Returns:
+            numpy.ndarray: Synthetic grayscale image (300x300)
+        """
+        print("  Creating synthetic image (dataset not available)...")
+        
+        # Create a 300x300 grayscale image
+        img = np.zeros((300, 300), dtype=np.uint8)
+        
+        # Add some geometric shapes for interesting features
+        # Circle
+        cv2.circle(img, (150, 150), 80, 200, -1)
+        
+        # Rectangle
+        cv2.rectangle(img, (50, 50), (120, 120), 150, -1)
+        
+        # Triangle (using polygon)
+        pts = np.array([[250, 50], [200, 150], [280, 150]], np.int32)
+        cv2.fillPoly(img, [pts], 180)
+        
+        # Add some noise for texture
+        noise = np.random.normal(0, 15, img.shape).astype(np.uint8)
+        img = cv2.add(img, noise)
+        
+        return img
+    
     def load_real_image(self):
         """
         Load a real image from the Face Mask dataset.
+        Falls back to synthetic image if dataset is not available.
         
         Returns:
-            numpy.ndarray: Real grayscale image from dataset
+            numpy.ndarray: Real or synthetic grayscale image from dataset
         """
-        # Path to Face Mask dataset
-        data_dir = Path("../../lab_01_image_processing/data/sample_images/Face Mask Dataset")
+        # Path to Face Mask dataset (in labs_lite directory)
+        data_dir = Path("data/sample_images/Face Mask Dataset")
         
         # Try to load from WithoutMask folder first, then WithMask
         image_dirs = [
@@ -77,10 +107,9 @@ class ImageProcessor:
                 available_images.extend(list(img_dir.glob("*.png")))
         
         if not available_images:
-            raise FileNotFoundError(
-                f"No images found in Face Mask dataset at {data_dir}\n"
-                "Please ensure the dataset is downloaded."
-            )
+            print(f"  NOTE: Face Mask dataset not found at {data_dir}")
+            print("  Falling back to synthetic image generation...")
+            return self.create_synthetic_image()
         
         # Select a random image
         img_path = random.choice(available_images)
@@ -467,11 +496,11 @@ class ImageProcessor:
         
         start_time = time.time()
         
-        # Load real image from Face Mask dataset
-        print("\nLoading real image from Face Mask dataset...")
+        # Load real image from Face Mask dataset (or create synthetic)
+        print("\nLoading image...")
         img = self.load_real_image()
         cv2.imwrite(str(self.output_dir / '0_original_image.png'), img)
-        print(f"  ✓ Real image loaded: {img.shape}")
+        print(f"  SUCCESS: Image loaded: {img.shape}")
         
         # Run all operations
         self.histogram_equalization(img)
