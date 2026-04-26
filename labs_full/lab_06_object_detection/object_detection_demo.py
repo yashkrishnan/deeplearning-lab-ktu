@@ -401,7 +401,7 @@ def train_model(model, train_loader, val_loader, num_epochs=30):
               f"Train: {train_loss:.4f}, Val: {val_loss:.4f} "
               f"(Obj: {val_obj_loss:.4f}, BBox: {val_bbox_loss:.4f}, Class: {val_class_loss:.4f})")
     
-    print("✓ Training complete!")
+    print("SUCCESS: Training complete!")
     return history
 
 
@@ -545,10 +545,10 @@ def main():
     # Visualize results
     print("Generating visualizations...")
     det_vis = visualize_detections(model, val_dataset, num_samples=6)
-    print(f"  ✓ Detection results: {det_vis}")
+    print(f"  SUCCESS: Detection results: {det_vis}")
     
     history_plot = plot_training_history(history)
-    print(f"  ✓ Training history: {history_plot}")
+    print(f"  SUCCESS: Training history: {history_plot}")
     print()
     
     print("=" * 70)

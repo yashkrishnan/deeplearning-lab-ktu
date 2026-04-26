@@ -313,7 +313,7 @@ def train_model(model, train_loader, val_loader, num_epochs=50, model_name="Seq2
         print(f"Epoch [{epoch+1}/{num_epochs}] - "
               f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
     
-    print(f"✓ {model_name} training complete! Best Val Loss: {best_val_loss:.4f}")
+    print(f"SUCCESS: {model_name} training complete! Best Val Loss: {best_val_loss:.4f}")
     return history
 
 
@@ -487,7 +487,7 @@ def main():
         [seq2seq_history, attn_history],
         ['Basic Seq2Seq', 'Seq2Seq + Attention']
     )
-    print(f"  ✓ Training comparison: {comparison_plot}")
+    print(f"  SUCCESS: Training comparison: {comparison_plot}")
     print()
     
     print("=" * 70)

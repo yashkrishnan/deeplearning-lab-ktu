@@ -59,9 +59,9 @@ class CIFAR10Classifiers:
         self.class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
                            'dog', 'frog', 'horse', 'ship', 'truck']
         
-        print(f"✓ Output directory: {self.output_dir}")
-        print(f"✓ Device: {self.device}")
-        print(f"✓ Using subset: {self.use_subset}")
+        print(f"SUCCESS: Output directory: {self.output_dir}")
+        print(f"SUCCESS: Device: {self.device}")
+        print(f"SUCCESS: Using subset: {self.use_subset}")
     
     def load_data(self):
         """
@@ -96,8 +96,8 @@ class CIFAR10Classifiers:
             trainset = torch.utils.data.Subset(trainset, train_indices)
             testset = torch.utils.data.Subset(testset, test_indices)
         
-        print(f"  ✓ Training samples: {len(trainset)}")
-        print(f"  ✓ Test samples: {len(testset)}")
+        print(f"  SUCCESS: Training samples: {len(trainset)}")
+        print(f"  SUCCESS: Test samples: {len(testset)}")
         
         return trainset, testset
     
@@ -149,8 +149,8 @@ class CIFAR10Classifiers:
         accuracy = accuracy_score(y_test, y_pred)
         train_time = time.time() - start_time
         
-        print(f"  ✓ Training completed in {train_time:.2f} seconds")
-        print(f"  ✓ Test Accuracy: {accuracy*100:.2f}%")
+        print(f"  SUCCESS: Training completed in {train_time:.2f} seconds")
+        print(f"  SUCCESS: Test Accuracy: {accuracy*100:.2f}%")
         
         return {
             'model': knn,
@@ -189,8 +189,8 @@ class CIFAR10Classifiers:
         accuracy = accuracy_score(y_test, y_pred)
         train_time = time.time() - start_time
         
-        print(f"  ✓ Training completed in {train_time:.2f} seconds")
-        print(f"  ✓ Test Accuracy: {accuracy*100:.2f}%")
+        print(f"  SUCCESS: Training completed in {train_time:.2f} seconds")
+        print(f"  SUCCESS: Test Accuracy: {accuracy*100:.2f}%")
         
         return {
             'model': svm,
@@ -302,8 +302,8 @@ class CIFAR10Classifiers:
         accuracy = accuracy_score(y_true, y_pred)
         train_time = time.time() - start_time
         
-        print(f"  ✓ Training completed in {train_time:.2f} seconds")
-        print(f"  ✓ Test Accuracy: {accuracy*100:.2f}%")
+        print(f"  SUCCESS: Training completed in {train_time:.2f} seconds")
+        print(f"  SUCCESS: Test Accuracy: {accuracy*100:.2f}%")
         
         # Plot training history
         self.plot_training_history(train_losses, train_accuracies)
@@ -346,7 +346,7 @@ class CIFAR10Classifiers:
         plt.savefig(self.output_dir / 'training_history.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print(f"  ✓ Training history saved to: {self.output_dir / 'training_history.png'}")
+        print(f"  SUCCESS: Training history saved to: {self.output_dir / 'training_history.png'}")
     
     def plot_confusion_matrix(self, y_true, y_pred, model_name):
         """
@@ -372,7 +372,7 @@ class CIFAR10Classifiers:
         plt.savefig(self.output_dir / filename, dpi=150, bbox_inches='tight')
         plt.close()
         
-        print(f"  ✓ Confusion matrix saved to: {self.output_dir / filename}")
+        print(f"  SUCCESS: Confusion matrix saved to: {self.output_dir / filename}")
     
     def compare_results(self, results):
         """
@@ -423,7 +423,7 @@ class CIFAR10Classifiers:
         plt.savefig(self.output_dir / 'classifier_comparison.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print(f"\n✓ Comparison plot saved to: {self.output_dir / 'classifier_comparison.png'}")
+        print(f"\nSUCCESS: Comparison plot saved to: {self.output_dir / 'classifier_comparison.png'}")
         
         # Print summary table
         print("\nSummary Table:")
@@ -451,7 +451,7 @@ class CIFAR10Classifiers:
         print("\nPreparing data for classical ML classifiers...")
         X_train, y_train = self.prepare_data_for_sklearn(trainset)
         X_test, y_test = self.prepare_data_for_sklearn(testset)
-        print("  ✓ Data prepared (flattened to vectors)")
+        print("  SUCCESS: Data prepared (flattened to vectors)")
         
         # Train classifiers
         results = []
@@ -479,9 +479,9 @@ class CIFAR10Classifiers:
         print("\n" + "="*60)
         print("  SUMMARY")
         print("="*60)
-        print(f"✓ All classifiers trained and evaluated!")
-        print(f"✓ Total execution time: {total_time:.2f} seconds")
-        print(f"✓ Output files saved to: {self.output_dir}/")
+        print(f"SUCCESS: All classifiers trained and evaluated!")
+        print(f"SUCCESS: Total execution time: {total_time:.2f} seconds")
+        print(f"SUCCESS: Output files saved to: {self.output_dir}/")
         print("\nGenerated files:")
         print("  1. training_history.png - Neural network training curves")
         print("  2. confusion_matrix_knn.png - KNN confusion matrix")

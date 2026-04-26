@@ -161,8 +161,8 @@ class RegularizationStudy:
         self.output_dir.mkdir(exist_ok=True)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        print(f"✓ Output directory: {self.output_dir}")
-        print(f"✓ Device: {self.device}")
+        print(f"SUCCESS: Output directory: {self.output_dir}")
+        print(f"SUCCESS: Device: {self.device}")
     
     def load_data(self):
         """
@@ -209,9 +209,9 @@ class RegularizationStudy:
         val_loader = DataLoader(valset, batch_size=64, shuffle=False)
         test_loader = DataLoader(testset, batch_size=64, shuffle=False)
         
-        print(f"  ✓ Training samples: {len(trainset)}")
-        print(f"  ✓ Validation samples: {len(valset)}")
-        print(f"  ✓ Test samples: {len(testset)}")
+        print(f"  SUCCESS: Training samples: {len(trainset)}")
+        print(f"  SUCCESS: Validation samples: {len(valset)}")
+        print(f"  SUCCESS: Test samples: {len(testset)}")
         
         return train_loader, val_loader, test_loader
     
@@ -296,8 +296,8 @@ class RegularizationStudy:
                       f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%, "
                       f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
         
-        print(f"  ✓ Training completed")
-        print(f"  ✓ Final validation accuracy: {history['val_acc'][-1]:.2f}%")
+        print(f"  SUCCESS: Training completed")
+        print(f"  SUCCESS: Final validation accuracy: {history['val_acc'][-1]:.2f}%")
         
         return history, model
     
@@ -385,7 +385,7 @@ class RegularizationStudy:
         plt.savefig(self.output_dir / 'training_comparison.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print(f"  ✓ Comparison plot saved to: {self.output_dir / 'training_comparison.png'}")
+        print(f"  SUCCESS: Comparison plot saved to: {self.output_dir / 'training_comparison.png'}")
     
     def plot_overfitting_analysis(self, histories, model_names):
         """
@@ -421,7 +421,7 @@ class RegularizationStudy:
         plt.savefig(self.output_dir / 'overfitting_analysis.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print(f"  ✓ Overfitting analysis saved to: {self.output_dir / 'overfitting_analysis.png'}")
+        print(f"  SUCCESS: Overfitting analysis saved to: {self.output_dir / 'overfitting_analysis.png'}")
     
     def plot_final_comparison(self, test_accuracies, model_names):
         """
@@ -454,7 +454,7 @@ class RegularizationStudy:
         plt.savefig(self.output_dir / 'final_accuracy_comparison.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print(f"  ✓ Final comparison saved to: {self.output_dir / 'final_accuracy_comparison.png'}")
+        print(f"  SUCCESS: Final comparison saved to: {self.output_dir / 'final_accuracy_comparison.png'}")
     
     def run_study(self):
         """
@@ -494,7 +494,7 @@ class RegularizationStudy:
             test_accuracies.append(test_acc)
             model_names.append(name)
             
-            print(f"  ✓ Test Accuracy: {test_acc:.2f}%")
+            print(f"  SUCCESS: Test Accuracy: {test_acc:.2f}%")
         
         # Generate plots
         self.plot_comparison(histories, model_names)
@@ -516,8 +516,8 @@ class RegularizationStudy:
             print(f"{name:<30} {test_accuracies[i]:>6.2f}%        {gap:>6.2f}%")
         print("-" * 60)
         
-        print(f"\n✓ Study completed in {elapsed_time:.2f} seconds")
-        print(f"✓ Output files saved to: {self.output_dir}/")
+        print(f"\nSUCCESS: Study completed in {elapsed_time:.2f} seconds")
+        print(f"SUCCESS: Output files saved to: {self.output_dir}/")
         print("\nGenerated files:")
         print("  1. training_comparison.png - Training curves comparison")
         print("  2. overfitting_analysis.png - Overfitting analysis")

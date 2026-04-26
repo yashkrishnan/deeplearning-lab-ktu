@@ -301,7 +301,7 @@ def train_model(encoder, decoder, train_loader, val_loader, num_epochs=30, model
         print(f"Epoch [{epoch+1}/{num_epochs}] - "
               f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
     
-    print(f"✓ {model_name} training complete!")
+    print(f"SUCCESS: {model_name} training complete!")
     return history
 
 
@@ -462,14 +462,14 @@ def main():
     rnn_vis = visualize_captions(rnn_encoder, rnn_decoder, val_dataset, 6, "RNN")
     lstm_vis = visualize_captions(lstm_encoder, lstm_decoder, val_dataset, 6, "LSTM")
     
-    print(f"  ✓ RNN captions: {rnn_vis}")
-    print(f"  ✓ LSTM captions: {lstm_vis}")
+    print(f"  SUCCESS: RNN captions: {rnn_vis}")
+    print(f"  SUCCESS: LSTM captions: {lstm_vis}")
     
     comparison_plot = plot_training_comparison(
         [rnn_history, lstm_history],
         ['RNN', 'LSTM']
     )
-    print(f"  ✓ Training comparison: {comparison_plot}")
+    print(f"  SUCCESS: Training comparison: {comparison_plot}")
     print()
     
     print("=" * 70)

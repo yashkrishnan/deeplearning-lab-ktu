@@ -337,7 +337,7 @@ def train_model(model, train_loader, val_loader, num_epochs=30, model_name="Mode
               f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, "
               f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
     
-    print(f"✓ {model_name} training complete! Best Val Acc: {best_val_acc:.4f}")
+    print(f"SUCCESS: {model_name} training complete! Best Val Acc: {best_val_acc:.4f}")
     return history
 
 
@@ -493,7 +493,7 @@ def main():
         [bilstm_history, lstm_history],
         ['BiLSTM', 'SimpleLSTM']
     )
-    print(f"  ✓ Training comparison: {comparison_plot}")
+    print(f"  SUCCESS: Training comparison: {comparison_plot}")
     print()
     
     # Interactive demo

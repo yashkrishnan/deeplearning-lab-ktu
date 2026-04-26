@@ -326,7 +326,7 @@ def train_model(model, train_loader, val_loader, num_epochs=20, model_name="Mode
               f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, "
               f"IoU: {mean_iou:.4f}, Dice: {mean_dice:.4f}")
     
-    print(f"✓ {model_name} training complete!")
+    print(f"SUCCESS: {model_name} training complete!")
     return history
 
 
@@ -463,8 +463,8 @@ def main():
     unet_vis = visualize_predictions(unet, val_dataset, num_samples=5, model_name="UNet")
     cnn_vis = visualize_predictions(simple_cnn, val_dataset, num_samples=5, model_name="Simple CNN")
     
-    print(f"  ✓ UNet predictions: {unet_vis}")
-    print(f"  ✓ Simple CNN predictions: {cnn_vis}")
+    print(f"  SUCCESS: UNet predictions: {unet_vis}")
+    print(f"  SUCCESS: Simple CNN predictions: {cnn_vis}")
     print()
     
     # Plot training history
@@ -472,7 +472,7 @@ def main():
         [unet_history, cnn_history],
         ['UNet', 'Simple CNN']
     )
-    print(f"  ✓ Training comparison: {history_plot}")
+    print(f"  SUCCESS: Training comparison: {history_plot}")
     print()
     
     print("=" * 70)

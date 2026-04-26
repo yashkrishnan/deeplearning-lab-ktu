@@ -240,7 +240,7 @@ def train_model(model, train_loader, val_loader, num_epochs=50, model_name="Mode
         print(f"Epoch [{epoch+1}/{num_epochs}] - "
               f"Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
     
-    print(f"✓ {model_name} training complete! Best Val Loss: {best_val_loss:.6f}")
+    print(f"SUCCESS: {model_name} training complete! Best Val Loss: {best_val_loss:.6f}")
     return history
 
 
@@ -488,17 +488,17 @@ def main():
     lstm_vis = visualize_predictions(lstm_pred, lstm_target, test_time, "LSTM")
     gru_vis = visualize_predictions(gru_pred, gru_target, test_time, "GRU")
     
-    print(f"  ✓ LSTM predictions: {lstm_vis}")
-    print(f"  ✓ GRU predictions: {gru_vis}")
+    print(f"  SUCCESS: LSTM predictions: {lstm_vis}")
+    print(f"  SUCCESS: GRU predictions: {gru_vis}")
     
     comparison_plot = plot_training_comparison(
         [lstm_history, gru_history],
         ['LSTM', 'GRU']
     )
-    print(f"  ✓ Training comparison: {comparison_plot}")
+    print(f"  SUCCESS: Training comparison: {comparison_plot}")
     
     metrics_plot = plot_metrics_comparison(metrics_dict)
-    print(f"  ✓ Metrics comparison: {metrics_plot}")
+    print(f"  SUCCESS: Metrics comparison: {metrics_plot}")
     print()
     
     print("=" * 70)

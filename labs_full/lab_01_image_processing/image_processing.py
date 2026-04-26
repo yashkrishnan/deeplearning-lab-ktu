@@ -41,7 +41,7 @@ class ImageProcessor:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
-        print(f"✓ Output directory created: {self.output_dir}")
+        print(f"SUCCESS: Output directory created: {self.output_dir}")
     
     def create_sample_image(self):
         """
@@ -119,8 +119,8 @@ class ImageProcessor:
         plt.savefig(self.output_dir / '1_histogram_equalization.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print("  ✓ Histogram equalization complete")
-        print(f"  ✓ Saved to: {self.output_dir / '1_histogram_equalization.png'}")
+        print("  SUCCESS: Histogram equalization complete")
+        print(f"  SUCCESS: Saved to: {self.output_dir / '1_histogram_equalization.png'}")
         
         return equalized
     
@@ -183,8 +183,8 @@ class ImageProcessor:
         plt.savefig(self.output_dir / '2_thresholding.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print("  ✓ Thresholding complete")
-        print(f"  ✓ Saved to: {self.output_dir / '2_thresholding.png'}")
+        print("  SUCCESS: Thresholding complete")
+        print(f"  SUCCESS: Saved to: {self.output_dir / '2_thresholding.png'}")
         
         return {
             'binary': binary,
@@ -256,8 +256,8 @@ class ImageProcessor:
         plt.savefig(self.output_dir / '3_edge_detection.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print("  ✓ Edge detection complete")
-        print(f"  ✓ Saved to: {self.output_dir / '3_edge_detection.png'}")
+        print("  SUCCESS: Edge detection complete")
+        print(f"  SUCCESS: Saved to: {self.output_dir / '3_edge_detection.png'}")
         
         return {
             'sobel_x': sobel_x,
@@ -338,8 +338,8 @@ class ImageProcessor:
         plt.savefig(self.output_dir / '4_data_augmentation.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print("  ✓ Data augmentation complete")
-        print(f"  ✓ Saved to: {self.output_dir / '4_data_augmentation.png'}")
+        print("  SUCCESS: Data augmentation complete")
+        print(f"  SUCCESS: Saved to: {self.output_dir / '4_data_augmentation.png'}")
         
         return {
             'rotated': rotated,
@@ -419,8 +419,8 @@ class ImageProcessor:
         plt.savefig(self.output_dir / '5_morphological_operations.png', dpi=150, bbox_inches='tight')
         plt.close()
         
-        print("  ✓ Morphological operations complete")
-        print(f"  ✓ Saved to: {self.output_dir / '5_morphological_operations.png'}")
+        print("  SUCCESS: Morphological operations complete")
+        print(f"  SUCCESS: Saved to: {self.output_dir / '5_morphological_operations.png'}")
         
         return {
             'binary': binary,
@@ -448,7 +448,7 @@ class ImageProcessor:
         print("\nGenerating sample image...")
         img = self.create_sample_image()
         cv2.imwrite(str(self.output_dir / '0_original_image.png'), img)
-        print(f"  ✓ Sample image created: {img.shape}")
+        print(f"  SUCCESS: Sample image created: {img.shape}")
         
         # Run all operations
         self.histogram_equalization(img)
@@ -462,9 +462,9 @@ class ImageProcessor:
         print("\n" + "="*60)
         print("  SUMMARY")
         print("="*60)
-        print(f"✓ All operations completed successfully!")
-        print(f"✓ Total execution time: {elapsed_time:.2f} seconds")
-        print(f"✓ Output files saved to: {self.output_dir}/")
+        print(f"SUCCESS: All operations completed successfully!")
+        print(f"SUCCESS: Total execution time: {elapsed_time:.2f} seconds")
+        print(f"SUCCESS: Output files saved to: {self.output_dir}/")
         print("\nGenerated files:")
         print("  1. 0_original_image.png - Sample input image")
         print("  2. 1_histogram_equalization.png - Contrast enhancement")

@@ -302,7 +302,7 @@ def main():
             vis_path = OUTPUT_DIR / f"annotated_image_{i:03d}.png"
             visualize_annotations(img_path, annotations, vis_path)
         
-        print(f"  ✓ Image {i+1}/{num_images}: {len(annotations)} objects")
+        print(f"  SUCCESS: Image {i+1}/{num_images}: {len(annotations)} objects")
     
     # Save COCO format JSON
     coco_path = ANNOTATIONS_DIR / "annotations_coco.json"
@@ -341,21 +341,21 @@ def main():
     # Plot class distribution
     dist_path = OUTPUT_DIR / "class_distribution.png"
     plot_class_distribution(stats, dist_path)
-    print(f"✓ Class distribution plot saved: {dist_path}")
+    print(f"SUCCESS: Class distribution plot saved: {dist_path}")
     print()
     
     # Save statistics to JSON
     stats_path = OUTPUT_DIR / "annotation_statistics.json"
     with open(stats_path, 'w') as f:
         json.dump(stats, f, indent=2)
-    print(f"✓ Statistics saved: {stats_path}")
+    print(f"SUCCESS: Statistics saved: {stats_path}")
     print()
     
     # Create classes.txt for YOLO
     classes_path = ANNOTATIONS_DIR / "classes.txt"
     with open(classes_path, 'w') as f:
         f.write('\n'.join(CLASSES))
-    print(f"✓ Class names saved: {classes_path}")
+    print(f"SUCCESS: Class names saved: {classes_path}")
     print()
     
     print("=" * 70)
