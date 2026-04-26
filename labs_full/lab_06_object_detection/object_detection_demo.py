@@ -20,6 +20,7 @@ Author: Deep Learning Lab
 """
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -311,6 +312,7 @@ def train_model(model, train_loader, num_epochs, device):
         history['class_loss'].append(avg_class_loss)
 
         print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}, Box={avg_box_loss:.4f}, Class={avg_class_loss:.4f}")
+        sys.stdout.flush()
 
     return history
 

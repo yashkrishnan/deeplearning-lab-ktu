@@ -27,6 +27,7 @@ Author: Deep Learning Lab
 """
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -327,7 +328,8 @@ def train_model(model, train_loader, val_loader, num_epochs, device, model_name=
         
         print(f"Epoch {epoch+1}: Train Loss={train_loss:.4f}, Val Loss={val_loss:.4f}, "
               f"IoU={val_iou:.4f}, Dice={val_dice:.4f}")
-        
+        sys.stdout.flush()
+
         scheduler.step()
     
     return history
