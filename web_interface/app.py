@@ -449,30 +449,51 @@ def run_lab(lab_id):
     # Run the script in a separate thread
     def run_script():
         try:
+            env = os.environ.copy()
+            env['PYTHONUNBUFFERED'] = '1'   # force unbuffered stdout/stderr
+            env['TQDM_DISABLE'] = '1'       # suppress tqdm progress bars
+
             process = subprocess.Popen(
-                ['python', str(script_path)],
+                ['python', '-u', str(script_path)],
                 cwd=str(script_path.parent),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1
+                bufsize=1,
+                env=env,
             )
-            
+
             running_processes[lab_id] = process
-            
-            # Read output line by line
-            for line in process.stdout:
-                process_outputs[lab_id]['stdout'].append(line.strip())
-            
-            for line in process.stderr:
-                process_outputs[lab_id]['stderr'].append(line.strip())
-            
+
+            # Read stdout and stderr concurrently to prevent pipe-buffer deadlock
+            # (tqdm writes to stderr; if unread, the 64 KB buffer fills and the
+            #  subprocess blocks mid-epoch — which is the "stuck" symptom)
+            def _drain(stream, store):
+                for raw in stream:
+                    line = raw.rstrip('\n').rstrip('\r')
+                    if line:
+                        store.append(line)
+
+            t_out = threading.Thread(
+                target=_drain,
+                args=(process.stdout, process_outputs[lab_id]['stdout']),
+                daemon=True,
+            )
+            t_err = threading.Thread(
+                target=_drain,
+                args=(process.stderr, process_outputs[lab_id]['stderr']),
+                daemon=True,
+            )
+            t_out.start()
+            t_err.start()
+            t_out.join()
+            t_err.join()
             process.wait()
-            
+
             process_outputs[lab_id]['status'] = 'completed' if process.returncode == 0 else 'failed'
             process_outputs[lab_id]['return_code'] = process.returncode
             process_outputs[lab_id]['end_time'] = datetime.now().isoformat()
-            
+
         except Exception as e:
             process_outputs[lab_id]['status'] = 'error'
             process_outputs[lab_id]['error'] = str(e)

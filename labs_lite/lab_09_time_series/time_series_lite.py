@@ -20,6 +20,7 @@ Author: Deep Learning Lab (Lite Version)
 """
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -194,6 +195,7 @@ def train_model(model, train_loader, num_epochs, device, model_name="Model"):
         history['loss'].append(avg_loss)
         
         print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}")
+        sys.stdout.flush()
     
     return history
 
