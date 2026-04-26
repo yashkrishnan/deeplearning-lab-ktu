@@ -1,6 +1,6 @@
 # Dataset Setup Guide - Step by Step
 
-## 🎯 Quick Summary
+## Quick Summary
 
 **Good News**: Labs 1-3 work immediately without any dataset downloads!
 - Lab 1: Generates synthetic images
@@ -8,15 +8,15 @@
 
 **For Labs 4-10**: Follow this guide to download datasets from Kaggle.
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before downloading datasets, you need:
-1. ✅ Python 3.8+ installed
-2. ✅ pip package manager
-3. 🔑 Kaggle account (free)
-4. 💾 5-20 GB free disk space (depending on datasets)
+1. Python 3.8+ installed
+2. pip package manager
+3. Kaggle account (free)
+4. 5-20 GB free disk space (depending on datasets)
 
-## 🚀 Step-by-Step Setup
+## Step-by-Step Setup
 
 ### Step 1: Install Dependencies
 
@@ -94,7 +94,7 @@ You'll see:
   DEEP LEARNING LAB - DATASET DOWNLOADER
 ==========================================
 
-✓ Kaggle CLI is installed and configured
+SUCCESS: Kaggle CLI is installed and configured
 
 Which datasets would you like to download?
 
@@ -133,7 +133,7 @@ You should see directories like:
 50M     ./lab_10_seq2seq/data
 ```
 
-## 🎓 Running Labs After Setup
+## Running Labs After Setup
 
 ### Labs 1-3 (No Setup Needed)
 ```bash
@@ -158,7 +158,7 @@ cat README.md  # Read instructions
 # Then implement based on the guide
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Issue 1: "Kaggle CLI is not installed"
 ```bash
@@ -201,27 +201,27 @@ df -h
 - Use option 2 (recommended) instead of option 3 (all)
 - Download during off-peak hours
 
-## 📊 Dataset Size Reference
+## Dataset Size Reference
 
 | Lab | Dataset | Size | Required? |
 |-----|---------|------|-----------|
-| Lab 1 | Synthetic | - | ✅ Auto |
-| Lab 2 | CIFAR-10 | 170 MB | ✅ Auto |
-| Lab 3 | CIFAR-10 | 170 MB | ✅ Auto |
-| Lab 4 | Road Signs | Varies | ⚠️ Optional |
-| Lab 5 | Pet Dataset | 800 MB | ⚠️ Recommended |
-| Lab 6 | Pascal VOC | 2 GB | ⚠️ Recommended |
-| Lab 7 | Flickr8k | 1 GB | ⚠️ Recommended |
-| Lab 8 | Cornell Dialogs | 10 MB | ⚠️ Recommended |
-| Lab 9 | Energy Data | 50 MB | ⚠️ Recommended |
-| Lab 10 | Translation | 50 MB | ⚠️ Recommended |
+| Lab 1 | Synthetic | - | Auto |
+| Lab 2 | CIFAR-10 | 170 MB | Auto |
+| Lab 3 | CIFAR-10 | 170 MB | Auto |
+| Lab 4 | Road Signs | Varies | Optional |
+| Lab 5 | Pet Dataset | 800 MB | Recommended |
+| Lab 6 | Pascal VOC | 2 GB | Recommended |
+| Lab 7 | Flickr8k | 1 GB | Recommended |
+| Lab 8 | Cornell Dialogs | 10 MB | Recommended |
+| Lab 9 | Energy Data | 50 MB | Recommended |
+| Lab 10 | Translation | 50 MB | Recommended |
 
 **Legend:**
-- ✅ Auto: Downloaded automatically by the program
-- ⚠️ Optional: Lab works without it (uses examples in README)
-- ⚠️ Recommended: Needed for full implementation
+- Auto: Downloaded automatically by the program
+- Optional: Lab works without it (uses examples in README)
+- Recommended: Needed for full implementation
 
-## 🎯 Quick Start Paths
+## Quick Start Paths
 
 ### Path 1: Immediate Start (No Downloads)
 ```bash
@@ -250,14 +250,14 @@ pip install -r requirements.txt
 ```
 **Time**: 10 minutes setup + 30 minutes download + varies per lab
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Kaggle API Docs**: https://github.com/Kaggle/kaggle-api
 - **Dataset Guide**: See `DATASETS.md` in this directory
 - **Getting Started**: See `GETTING_STARTED.md`
 - **Lab Instructions**: Each lab has its own README.md
 
-## ✅ Verification Checklist
+## Verification Checklist
 
 Before running labs, verify:
 - [ ] Python 3.8+ installed (`python3 --version`)
@@ -267,7 +267,7 @@ Before running labs, verify:
 - [ ] Sufficient disk space (`df -h`)
 - [ ] Internet connection (for downloads)
 
-## 🎉 You're Ready!
+## You're Ready!
 
 Once setup is complete:
 1. Start with Lab 1 (no downloads needed)
@@ -275,7 +275,7 @@ Once setup is complete:
 3. Download datasets for Labs 4-10 as needed
 4. Follow each lab's README for specific instructions
 
-**Happy Learning! 🚀**
+**Happy Learning!**
 
 ---
 

@@ -76,6 +76,7 @@ labs_lite/*/output/
 
 # Claude
 .claude/
+.claude
 
 # IDE
 .vscode/

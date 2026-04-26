@@ -1,10 +1,10 @@
 # Dataset Guide for Deep Learning Labs
 
-## 📊 Overview
+## Overview
 
 This guide provides information on datasets for each lab, including Kaggle datasets and alternatives.
 
-## 🔧 Setup Kaggle API
+## Setup Kaggle API
 
 ### Step 1: Install Kaggle CLI
 ```bash
@@ -29,7 +29,7 @@ mkdir %USERPROFILE%\.kaggle
 move %USERPROFILE%\Downloads\kaggle.json %USERPROFILE%\.kaggle\
 ```
 
-## 📁 Lab-Specific Datasets
+## Lab-Specific Datasets
 
 ### Lab 1: Image Processing
 **Dataset**: Not required - generates synthetic images
@@ -255,7 +255,7 @@ kaggle datasets download -d google/multi30k-dataset
 unzip multi30k-dataset.zip -d data/multi30k/
 ```
 
-## 🚀 Quick Download Script
+## Quick Download Script
 
 Create a script to download all datasets:
 
@@ -266,7 +266,7 @@ Create a script to download all datasets:
 echo "Downloading datasets for Deep Learning Labs..."
 
 # Lab 2 & 3: CIFAR-10 (auto-downloaded)
-echo "✓ CIFAR-10 will be downloaded automatically"
+echo "SUCCESS: CIFAR-10 will be downloaded automatically"
 
 # Lab 5: Segmentation
 echo "Downloading segmentation datasets..."
@@ -316,7 +316,7 @@ kaggle datasets download -d dhruvildave/en-fr-translation-dataset
 unzip -q en-fr-translation-dataset.zip -d data/translation/
 rm en-fr-translation-dataset.zip
 
-echo "✓ All datasets downloaded successfully!"
+echo "SUCCESS: All datasets downloaded successfully!"
 ```
 
 Save and run:
@@ -325,22 +325,22 @@ chmod +x download_datasets.sh
 ./download_datasets.sh
 ```
 
-## 📊 Dataset Summary
+## Dataset Summary
 
 | Lab | Dataset | Size (Estimated) | Actual Size | Status | Download Method |
 |-----|---------|------------------|-------------|--------|-----------------|
-| Lab 1 | Face Mask 12K | ~1 GB | 689 MB | ✅ Downloaded | Optional (Kaggle) |
-| Lab 2 | CIFAR-10 | 170 MB | 340 MB | ✅ Downloaded | Auto (PyTorch) |
-| Lab 3 | CIFAR-10 | 170 MB | 340 MB | ✅ Downloaded | Auto (PyTorch) |
-| Lab 4 | Road Sign Detection | ~100 MB | 441 MB | ✅ Downloaded | Kaggle |
-| Lab 5 | Oxford-IIIT Pets | ~800 MB | 3.0 GB | ✅ Downloaded | Kaggle |
-| Lab 6 | Pascal VOC 2012 | ~3.6 GB | 7.5 GB | ✅ Downloaded | Kaggle |
-| Lab 7 | Flickr8k | ~1 GB | 2.1 GB | ✅ Downloaded | Kaggle |
-| Lab 8 | Cornell Dialogs | ~10 MB | 51 MB | ✅ Downloaded | Kaggle |
-| Lab 9 | Energy Consumption | ~50 MB | 56 MB | ✅ Downloaded | Kaggle |
-| Lab 10 | EN-FR Translation | ~50 MB | 10 GB | ✅ Downloaded | Kaggle |
+| Lab 1 | Face Mask 12K | ~1 GB | 689 MB | Downloaded | Optional (Kaggle) |
+| Lab 2 | CIFAR-10 | 170 MB | 340 MB | Downloaded | Auto (PyTorch) |
+| Lab 3 | CIFAR-10 | 170 MB | 340 MB | Downloaded | Auto (PyTorch) |
+| Lab 4 | Road Sign Detection | ~100 MB | 441 MB | Downloaded | Kaggle |
+| Lab 5 | Oxford-IIIT Pets | ~800 MB | 3.0 GB | Downloaded | Kaggle |
+| Lab 6 | Pascal VOC 2012 | ~3.6 GB | 7.5 GB | Downloaded | Kaggle |
+| Lab 7 | Flickr8k | ~1 GB | 2.1 GB | Downloaded | Kaggle |
+| Lab 8 | Cornell Dialogs | ~10 MB | 51 MB | Downloaded | Kaggle |
+| Lab 9 | Energy Consumption | ~50 MB | 56 MB | Downloaded | Kaggle |
+| Lab 10 | EN-FR Translation | ~50 MB | 10 GB | Downloaded | Kaggle |
 
-## 💾 Storage Requirements
+## Storage Requirements
 
 **Current Total Usage**: ~24.5 GB (all datasets downloaded)
 
@@ -358,7 +358,7 @@ chmod +x download_datasets.sh
 
 **Note**: Actual sizes are larger than estimated due to extracted files and multiple formats (images, annotations, etc.)
 
-## 🔍 Alternative Data Sources
+## Alternative Data Sources
 
 ### If Kaggle is not available:
 
@@ -369,23 +369,23 @@ chmod +x download_datasets.sh
 5. **Flickr**: https://www.flickr.com/services/api/
 6. **UCI ML Repository**: https://archive.ics.uci.edu/ml/
 
-## 🎯 Current Status
+## Current Status
 
 All datasets have been downloaded and are ready to use:
-- **Lab 1**: Face Mask dataset (689 MB) ✅
-- **Lab 2**: CIFAR-10 (340 MB) ✅
-- **Lab 3**: CIFAR-10 (340 MB) ✅
-- **Lab 4**: Road Sign Detection (441 MB) ✅
-- **Lab 5**: Oxford-IIIT Pets (3.0 GB) ✅
-- **Lab 6**: Pascal VOC 2012 (7.5 GB) ✅
-- **Lab 7**: Flickr8k (2.1 GB) ✅
-- **Lab 8**: Cornell Movie Dialogs (51 MB) ✅
-- **Lab 9**: Energy Consumption (56 MB) ✅
-- **Lab 10**: EN-FR Translation (10 GB) ✅
+- **Lab 1**: Face Mask dataset (689 MB) [Downloaded]
+- **Lab 2**: CIFAR-10 (340 MB) [Downloaded]
+- **Lab 3**: CIFAR-10 (340 MB) [Downloaded]
+- **Lab 4**: Road Sign Detection (441 MB) [Downloaded]
+- **Lab 5**: Oxford-IIIT Pets (3.0 GB) [Downloaded]
+- **Lab 6**: Pascal VOC 2012 (7.5 GB) [Downloaded]
+- **Lab 7**: Flickr8k (2.1 GB) [Downloaded]
+- **Lab 8**: Cornell Movie Dialogs (51 MB) [Downloaded]
+- **Lab 9**: Energy Consumption (56 MB) [Downloaded]
+- **Lab 10**: EN-FR Translation (10 GB) [Downloaded]
 
 **Total Storage Used**: ~24.5 GB
 
-## 📝 Notes
+## Notes
 
 1. **All Datasets Downloaded**: All 10 labs now have their datasets ready
 2. **Folder Structure**: Labs renamed to `lab_01_*`, `lab_02_*`, etc. for better organization
@@ -393,7 +393,7 @@ All datasets have been downloaded and are ready to use:
 4. **Ready to Use**: All labs can now be run without additional downloads
 5. **Kaggle API**: Was used for downloading datasets (credentials at ~/.kaggle/kaggle.json)
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 **Issue**: Need to re-download a dataset
 ```bash
@@ -419,21 +419,21 @@ done
 rm -rf lab_01_image_processing/data/*
 ```
 
-## ✅ Verification
+## Verification
 
 All datasets verified and ready:
 ```bash
 # Current status (as of last check):
-lab_01_image_processing: 689M ✅
-lab_02_cifar10_classifiers: 340M ✅
-lab_03_batchnorm_dropout: 340M ✅
-lab_04_labeling_tools: 441M ✅
-lab_05_segmentation: 3.0G ✅
-lab_06_object_detection: 7.5G ✅
-lab_07_image_captioning: 2.1G ✅
-lab_08_chatbot: 51M ✅
-lab_09_time_series: 56M ✅
-lab_10_seq2seq: 10G ✅
+lab_01_image_processing: 689M [OK]
+lab_02_cifar10_classifiers: 340M [OK]
+lab_03_batchnorm_dropout: 340M [OK]
+lab_04_labeling_tools: 441M [OK]
+lab_05_segmentation: 3.0G [OK]
+lab_06_object_detection: 7.5G [OK]
+lab_07_image_captioning: 2.1G [OK]
+lab_08_chatbot: 51M [OK]
+lab_09_time_series: 56M [OK]
+lab_10_seq2seq: 10G [OK]
 ```
 
 ---
