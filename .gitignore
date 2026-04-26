@@ -41,12 +41,38 @@ lightning_logs/
 # TensorFlow
 tensorboard/
 
+# All dataset zips — download via Kaggle (web interface Download button)
+**/*.zip
+
 # Output directories
 logs/
 checkpoints/
 runs/
 wandb/
 mlruns/
+**/outputs/
+**/outputs_lite/
+**/output/
+
+# Dataset directories
+labs_full/lab_01_image_processing/data/sample_images/Face Mask Dataset/
+labs_full/lab_02_cifar10_classifiers/data/cifar-10-batches-py/
+labs_full/lab_03_batchnorm_dropout/data/cifar-10-batches-py/
+labs_full/lab_04_labeling_tools/data/practice_images/annotations/
+labs_full/lab_04_labeling_tools/data/practice_images/images/
+labs_full/lab_05_segmentation/data/pets/images/
+labs_full/lab_06_object_detection/data/voc/VOC2012/
+labs_full/lab_07_image_captioning/data/flickr8k/captions.txt
+labs_full/lab_07_image_captioning/data/flickr8k/Images/
+labs_full/lab_08_chatbot/data/cornell/*.txt
+labs_full/lab_08_chatbot/data/cornell/*.pdf
+labs_full/lab_09_time_series/data/energy/*.csv
+labs_full/lab_09_time_series/data/energy/*.parquet
+labs_full/lab_10_seq2seq/data/translation/en-fr.csv
+
+# Labs Lite - Data and Output directories
+labs_lite/*/data/
+labs_lite/*/output/
 
 # IDE
 .vscode/
