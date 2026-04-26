@@ -74,6 +74,9 @@ labs_full/lab_10_seq2seq/data/translation/en-fr.csv
 labs_lite/*/data/
 labs_lite/*/output/
 
+# Claude
+.claude/
+
 # IDE
 .vscode/
 .idea/
