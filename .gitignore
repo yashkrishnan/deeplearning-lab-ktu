@@ -41,6 +41,12 @@ lightning_logs/
 # TensorFlow
 tensorboard/
 
+# Oversized dataset zips (>2 GB — exceed GitHub LFS limit, download via Kaggle)
+labs_full/lab_06_object_detection/data/voc/pascal-voc-2012.zip
+labs_full/lab_10_seq2seq/data/translation/en-fr-translation-dataset.zip
+labs_lite/lab_06_object_detection/data/voc/pascal-voc-2012.zip
+labs_lite/lab_10_seq2seq/data/translation/en-fr-translation-dataset.zip
+
 # Output directories
 logs/
 checkpoints/
