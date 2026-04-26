@@ -12,9 +12,6 @@
         }
 
         :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --bg-muted: #334155;
             --bg-body: #eef1f6;
             --bg-card: #ffffff;
             --bg-muted: #e8edf4;
@@ -320,119 +317,126 @@
     <script>
         const labId = '{{ lab_id }}';
         let statusCheckInterval = null;
+        let knownLineCount = 0;   // tracks how many stdout lines we've already rendered
+
+        // ── UI helpers ────────────────────────────────────────────────────────
 
         function updateStatus(status) {
             const indicator = document.getElementById('status-indicator');
-            const runBtn = document.getElementById('run-btn');
-            const stopBtn = document.getElementById('stop-btn');
+            const runBtn    = document.getElementById('run-btn');
+            const stopBtn   = document.getElementById('stop-btn');
 
             indicator.className = 'status-indicator status-' + status;
             indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1);
 
-            if (status === 'running') {
-                runBtn.disabled = true;
-                stopBtn.disabled = false;
-            } else {
-                runBtn.disabled = false;
-                stopBtn.disabled = true;
-            }
+            const isRunning = status === 'running';
+            runBtn.disabled  = isRunning;
+            stopBtn.disabled = !isRunning;
         }
 
         function appendOutput(lines, isError = false) {
-            const console = document.getElementById('console-output');
+            const con = document.getElementById('console-output');
             lines.forEach(line => {
                 const div = document.createElement('div');
                 div.className = 'output-line' + (isError ? ' output-error' : '');
                 div.textContent = line;
-                console.appendChild(div);
+                con.appendChild(div);
             });
-            console.scrollTop = console.scrollHeight;
+            con.scrollTop = con.scrollHeight;
         }
 
-        function clearConsole() {
-            document.getElementById('console-output').innerHTML = 
-                '<div class="output-line">Starting lab execution...</div>';
+        function setConsole(lines) {
+            // Replace console contents with a full set of lines
+            const con = document.getElementById('console-output');
+            con.innerHTML = '';
+            appendOutput(lines);
+            knownLineCount = lines.length;
         }
 
-        async function runLab() {
-            clearConsole();
-            updateStatus('running');
-
-            try {
-                const response = await fetch(`/api/run/${labId}`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    appendOutput([data.message]);
-                    startStatusCheck();
-                } else {
-                    appendOutput([`Error: ${data.error}`], true);
-                    updateStatus('failed');
-                }
-            } catch (error) {
-                appendOutput([`Error: ${error.message}`], true);
-                updateStatus('failed');
-            }
-        }
-
-        async function stopLab() {
-            try {
-                const response = await fetch(`/api/stop/${labId}`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
-                
-                if (response.ok) {
-                    appendOutput([data.message]);
-                    updateStatus('idle');
-                    stopStatusCheck();
-                }
-            } catch (error) {
-                appendOutput([`Error: ${error.message}`], true);
-            }
-        }
+        // ── Polling ───────────────────────────────────────────────────────────
 
         function startStatusCheck() {
             if (statusCheckInterval) return;
-            
-            statusCheckInterval = setInterval(async () => {
-                try {
-                    const response = await fetch(`/api/status/${labId}`);
-                    const data = await response.json();
-
-                    if (data.status === 'running') {
-                        if (data.stdout && data.stdout.length > 0) {
-                            const currentLines = document.querySelectorAll('.output-line').length;
-                            const newLines = data.stdout.slice(currentLines - 1);
-                            if (newLines.length > 0) {
-                                appendOutput(newLines);
-                            }
-                        }
-                    } else if (data.status === 'completed') {
-                        appendOutput(['', 'Lab execution completed successfully!']);
-                        updateStatus('completed');
-                        stopStatusCheck();
-                        refreshOutputs();
-                    } else if (data.status === 'failed' || data.status === 'error') {
-                        appendOutput(['', 'Lab execution failed!'], true);
-                        if (data.stderr && data.stderr.length > 0) {
-                            appendOutput(data.stderr, true);
-                        }
-                        updateStatus('failed');
-                        stopStatusCheck();
-                    }
-                } catch (error) {
-                    console.error('Status check error:', error);
-                }
-            }, 1000);
+            statusCheckInterval = setInterval(checkStatus, 1000);
         }
 
         function stopStatusCheck() {
             if (statusCheckInterval) {
                 clearInterval(statusCheckInterval);
                 statusCheckInterval = null;
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch(`/api/status/${labId}`);
+                if (!response.ok) return;
+                const data = await response.json();
+
+                // Append only new stdout lines
+                if (data.stdout && data.stdout.length > knownLineCount) {
+                    const newLines = data.stdout.slice(knownLineCount);
+                    appendOutput(newLines);
+                    knownLineCount = data.stdout.length;
+                }
+
+                if (data.status === 'running') {
+                    // keep polling
+                } else if (data.status === 'completed') {
+                    appendOutput(['', '✓ Lab execution completed successfully!']);
+                    updateStatus('completed');
+                    stopStatusCheck();
+                    refreshOutputs();
+                } else if (data.status === 'stopped') {
+                    appendOutput(['', '⏹ Lab stopped.']);
+                    updateStatus('idle');
+                    stopStatusCheck();
+                } else if (data.status === 'failed' || data.status === 'error') {
+                    if (data.stderr && data.stderr.length > 0) appendOutput(data.stderr, true);
+                    appendOutput(['', '✗ Lab execution failed!'], true);
+                    updateStatus('failed');
+                    stopStatusCheck();
+                }
+            } catch (err) {
+                console.error('Status check error:', err);
+            }
+        }
+
+        // ── Actions ───────────────────────────────────────────────────────────
+
+        async function runLab() {
+            setConsole(['Starting lab execution...']);
+            updateStatus('running');
+
+            try {
+                const response = await fetch(`/api/run/${labId}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    appendOutput([data.message]);
+                    knownLineCount = 0;
+                    startStatusCheck();
+                } else {
+                    appendOutput([`Error: ${data.error}`], true);
+                    updateStatus('failed');
+                }
+            } catch (err) {
+                appendOutput([`Error: ${err.message}`], true);
+                updateStatus('failed');
+            }
+        }
+
+        async function stopLab() {
+            try {
+                const response = await fetch(`/api/stop/${labId}`, { method: 'POST' });
+                const data = await response.json();
+                if (response.ok) {
+                    appendOutput([data.message]);
+                    updateStatus('idle');
+                    stopStatusCheck();
+                }
+            } catch (err) {
+                appendOutput([`Error: ${err.message}`], true);
             }
         }
 
@@ -444,35 +448,30 @@
                 const response = await fetch(`/api/outputs/${labId}`);
                 const data = await response.json();
 
-                if (data.files && data.files.length > 0) {
-                    const imageFiles = data.files.filter(f => 
-                        ['png', 'jpg', 'jpeg'].includes(f.type.toLowerCase())
-                    );
+                const imageFiles = (data.files || []).filter(f =>
+                    ['png', 'jpg', 'jpeg'].includes(f.type.toLowerCase())
+                );
 
-                    if (imageFiles.length > 0) {
-                        container.innerHTML = '<div class="results-grid"></div>';
-                        const grid = container.querySelector('.results-grid');
-
-                        imageFiles.forEach(file => {
-                            const item = document.createElement('div');
-                            item.className = 'result-item';
-                            item.innerHTML = `
-                                <img src="/api/output/${labId}/${file.path}" alt="${file.name}">
-                                <div class="result-item-info">
-                                    <div class="result-item-name">${file.name}</div>
-                                    <div class="result-item-size">${formatFileSize(file.size)}</div>
-                                </div>
-                            `;
-                            grid.appendChild(item);
-                        });
-                    } else {
-                        container.innerHTML = '<div class="empty-state">No image outputs found.</div>';
-                    }
+                if (imageFiles.length > 0) {
+                    container.innerHTML = '<div class="results-grid"></div>';
+                    const grid = container.querySelector('.results-grid');
+                    imageFiles.forEach(file => {
+                        const item = document.createElement('div');
+                        item.className = 'result-item';
+                        item.innerHTML = `
+                            <img src="/api/output/${labId}/${file.path}" alt="${file.name}">
+                            <div class="result-item-info">
+                                <div class="result-item-name">${file.name}</div>
+                                <div class="result-item-size">${formatFileSize(file.size)}</div>
+                            </div>
+                        `;
+                        grid.appendChild(item);
+                    });
                 } else {
                     container.innerHTML = '<div class="empty-state">No results yet. Run the lab to generate outputs.</div>';
                 }
-            } catch (error) {
-                container.innerHTML = `<div class="empty-state">Error loading results: ${error.message}</div>`;
+            } catch (err) {
+                container.innerHTML = `<div class="empty-state">Error loading results: ${err.message}</div>`;
             }
         }
 
@@ -482,8 +481,41 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
-        // Load existing outputs on page load
-        refreshOutputs();
+        // ── Init: restore state on page load ─────────────────────────────────
+
+        async function initPage() {
+            refreshOutputs();   // always load existing output files
+
+            try {
+                const response = await fetch(`/api/status/${labId}`);
+                if (!response.ok) return;   // never run → stay idle
+                const data = await response.json();
+
+                if (!data.status) return;
+
+                // Restore console output
+                const lines = [...(data.stdout || []), ...(data.stderr || [])];
+                if (lines.length) setConsole(lines);
+
+                if (data.status === 'running') {
+                    updateStatus('running');
+                    startStatusCheck();   // resume live polling
+                } else if (data.status === 'completed') {
+                    appendOutput(['', '✓ Lab execution completed successfully!']);
+                    updateStatus('completed');
+                } else if (data.status === 'failed' || data.status === 'error') {
+                    appendOutput(['', '✗ Lab execution failed!'], true);
+                    updateStatus('failed');
+                } else if (data.status === 'stopped') {
+                    appendOutput(['', '⏹ Lab was stopped.']);
+                    updateStatus('idle');
+                }
+            } catch (err) {
+                // silently ignore — server may not have seen this lab yet
+            }
+        }
+
+        initPage();
     </script>
 </body>
 </html>
