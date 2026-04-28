@@ -2,6 +2,47 @@
 
 A comprehensive collection of educational deep learning programs demonstrating fundamental concepts in computer vision, natural language processing, and sequence modeling.
 
+## 🚀 Quick Start - Web Interface (Recommended)
+
+The easiest way to run and visualize the labs is through the web interface:
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+cd web_interface
+pip install -r requirements.txt
+```
+
+### 2. Start the Web Server
+
+```bash
+cd web_interface
+python app.py
+```
+
+### 3. Open in Browser
+
+Navigate to `http://localhost:5000` in your web browser.
+
+### 4. Run Labs
+
+- Browse all 10 labs from the dashboard
+- Click on any lab card to open its interface
+- Click "Run Lab" to execute
+- View real-time console output
+- See generated visualizations automatically
+
+**Features:**
+- Interactive web dashboard with Full Labs, Lite Labs, and Documentation sections
+- Real-time console output display
+- Automatic visualization of results
+- Run/Stop controls for each lab
+- Built-in documentation viewer
+- Modern dark theme with responsive design
+
+For detailed web interface documentation, see [web_interface/README.md](web_interface/README.md)
+
 ## 📚 Overview
 
 This repository contains 10 self-contained lab activities designed for academic learning. Each lab includes:
@@ -15,7 +56,7 @@ This repository contains 10 self-contained lab activities designed for academic 
 ## 🗂️ Lab Activities
 
 ### Lab 1: Basic Image Processing Operations
-**Directory:** `lab_01_image_processing/`
+**Directory:** `labs_full/lab_01_image_processing/` | **Lite:** `labs_lite/lab_01_image_processing/`
 - Histogram equalization
 - Thresholding techniques
 - Edge detection (Sobel, Canny)
@@ -23,74 +64,69 @@ This repository contains 10 self-contained lab activities designed for academic 
 - Morphological operations
 
 ### Lab 2: CIFAR-10 Classifiers
-**Directory:** `lab_02_cifar10_classifiers/`
+**Directory:** `labs_full/lab_02_cifar10_classifiers/` | **Lite:** `labs_lite/lab_02_cifar10_classifiers/`
 - KNN classifier implementation
 - 3-layer neural network classifier
 - SVM/Softmax classifier comparison
 
 ### Lab 3: Batch Normalization and Dropout Study
-**Directory:** `lab_03_batchnorm_dropout/`
+**Directory:** `labs_full/lab_03_batchnorm_dropout/` | **Lite:** `labs_lite/lab_03_batchnorm_dropout/`
 - Effect of batch normalization on training
 - Impact of dropout on overfitting
 - Comparative analysis with visualizations
 
 ### Lab 4: Image Labeling Tools Demonstration
-**Directory:** `lab_04_labeling_tools/`
-**Program:** `labeling_demo.py`
+**Directory:** `labs_full/lab_04_labeling_tools/` | **Lite:** `labs_lite/lab_04_labeling_tools/`
 - Synthetic image generation with annotations
 - Format conversions (COCO, YOLO, Pascal VOC)
 - Annotation visualization
 - Statistics generation
 
 ### Lab 5: Image Segmentation with UNet
-**Directory:** `lab_05_segmentation/`
-**Program:** `segmentation_demo.py`
+**Directory:** `labs_full/lab_05_segmentation/` | **Lite:** `labs_lite/lab_05_segmentation/`
 - UNet architecture implementation
 - Comparison with simple CNN baseline
 - Evaluation metrics (IoU, Dice coefficient)
 - Synthetic segmentation dataset
 
 ### Lab 6: Object Detection with YOLO
-**Directory:** `lab_06_object_detection/`
-**Program:** `object_detection_demo.py`
+**Directory:** `labs_full/lab_06_object_detection/` | **Lite:** `labs_lite/lab_06_object_detection/`
 - YOLO-style object detector
 - Bounding box prediction and classification
 - Non-Maximum Suppression (NMS)
 - Detection visualization
 
 ### Lab 7: Image Captioning with RNN/LSTM
-**Directory:** `lab_07_image_captioning/`
-**Program:** `image_captioning_demo.py`
+**Directory:** `labs_full/lab_07_image_captioning/` | **Lite:** `labs_lite/lab_07_image_captioning/`
 - CNN encoder + RNN/LSTM decoder
 - Comparison between Vanilla RNN and LSTM
 - Caption generation
 - Synthetic image-caption pairs
 
 ### Lab 8: Chatbot with Bi-directional LSTM
-**Directory:** `lab_08_chatbot/`
-**Program:** `chatbot_demo.py`
+**Directory:** `labs_full/lab_08_chatbot/` | **Lite:** `labs_lite/lab_08_chatbot/`
 - Bi-directional LSTM for intent classification
 - Comparison with unidirectional LSTM
 - Response generation
 - Interactive demo
 
 ### Lab 9: Time Series Forecasting with LSTM
-**Directory:** `lab_09_time_series/`
-**Program:** `time_series_demo.py`
+**Directory:** `labs_full/lab_09_time_series/` | **Lite:** `labs_lite/lab_09_time_series/`
 - LSTM and GRU for forecasting
 - Multi-step ahead prediction
 - Comparison with baseline
 - Evaluation metrics (MSE, MAE, RMSE, MAPE)
 
 ### Lab 10: Sequence to Sequence Learning
-**Directory:** `lab_10_seq2seq/`
-**Program:** `seq2seq_demo.py`
+**Directory:** `labs_full/lab_10_seq2seq/` | **Lite:** `labs_lite/lab_10_seq2seq/`
 - Encoder-decoder architecture
 - Attention mechanism
 - Machine translation (synthetic language)
 - Beam search decoding
 
-## 🚀 Quick Start
+## 💻 Alternative: Command Line
+
+If you prefer running labs directly from the command line:
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -111,48 +147,55 @@ Each lab is self-contained with an executable Python program. Navigate to the la
 
 ```bash
 # Lab 1: Image Processing
-cd lab_01_image_processing
+cd labs_full/lab_01_image_processing
 python image_processing.py
 
 # Lab 2: CIFAR-10 Classifiers
-cd lab_02_cifar10_classifiers
+cd labs_full/lab_02_cifar10_classifiers
 python cifar10_classifiers.py
 
 # Lab 3: Batch Normalization & Dropout
-cd lab_03_batchnorm_dropout
+cd labs_full/lab_03_batchnorm_dropout
 python batchnorm_dropout_study.py
 
 # Lab 4: Labeling Tools Demo
-cd lab_04_labeling_tools
+cd labs_full/lab_04_labeling_tools
 python labeling_demo.py
 
 # Lab 5: Image Segmentation
-cd lab_05_segmentation
+cd labs_full/lab_05_segmentation
 python segmentation_demo.py
 
 # Lab 6: Object Detection
-cd lab_06_object_detection
+cd labs_full/lab_06_object_detection
 python object_detection_demo.py
 
 # Lab 7: Image Captioning
-cd lab_07_image_captioning
+cd labs_full/lab_07_image_captioning
 python image_captioning_demo.py
 
 # Lab 8: Chatbot
-cd lab_08_chatbot
+cd labs_full/lab_08_chatbot
 python chatbot_demo.py
 
 # Lab 9: Time Series Forecasting
-cd lab_09_time_series
+cd labs_full/lab_09_time_series
 python time_series_demo.py
 
 # Lab 10: Sequence to Sequence
-cd lab_10_seq2seq
+cd labs_full/lab_10_seq2seq
 python seq2seq_demo.py
 ```
 
 Or run all labs sequentially:
 ```bash
+cd labs_full
+bash run_all_labs.sh
+```
+
+For lightweight versions with faster execution:
+```bash
+cd labs_lite
 bash run_all_labs.sh
 ```
 
@@ -193,6 +236,8 @@ All labs are designed to complete within 5 minutes on standard hardware (CPU):
 
 **With GPU:** Execution times can be 2-5x faster depending on GPU model.
 
+**Lite versions:** Execute 2-3x faster with reduced dataset sizes and epochs.
+
 ## 🎓 Learning Objectives
 
 By completing these labs, you will:
@@ -207,22 +252,34 @@ By completing these labs, you will:
 9. Apply deep learning to time series problems
 10. Understand sequence-to-sequence architectures
 
-## 📝 Lab Structure
+## 📝 Repository Structure
 
-Each lab directory contains:
 ```
-labX_name/
-├── README.md              # Lab-specific instructions and theory
-├── program_name.py        # Executable Python program
-└── output/               # Generated visualizations and results (created on run)
+dl-lab/
+├── web_interface/         # Web-based interface (recommended)
+│   ├── app.py            # Flask application
+│   ├── templates/        # HTML templates
+│   └── requirements.txt  # Web interface dependencies
+├── labs_full/            # Full-featured lab programs
+│   └── lab_XX_name/
+│       ├── README.md     # Lab-specific instructions
+│       ├── program.py    # Main executable
+│       └── output/       # Generated results (created on run)
+├── labs_lite/            # Lightweight versions (faster execution)
+│   └── lab_XX_name/
+│       ├── program_lite.py
+│       └── output/
+├── docs/                 # Additional documentation
+└── requirements.txt      # Main dependencies
 ```
 
 **All programs:**
 - Are fully self-contained and executable
-- Generate synthetic data (no external downloads needed for Labs 4-10)
+- Generate synthetic data or download datasets as needed
 - Create visualizations and save results in `output/` directory
 - Include comprehensive comments and documentation
 - Print progress and results to console
+- Available in both full and lite versions
 
 ## 🔧 Troubleshooting
 
@@ -241,6 +298,15 @@ pip install --upgrade -r requirements.txt
 - Ensure you're using GPU if available
 - Reduce dataset size or number of epochs
 - Check system resources
+
+## 📚 Documentation
+
+For more detailed information, see:
+- [Web Interface Guide](web_interface/README.md) - Complete web interface documentation
+- [Installation Guide](docs/INSTALLATION_GUIDE.md) - Detailed setup instructions
+- [Dataset Setup Guide](docs/DATASET_SETUP_GUIDE.md) - Dataset download and management
+- [Getting Started](docs/GETTING_STARTED.md) - Beginner's guide
+- [Advanced Tab Guide](docs/ADVANCED_TAB_GUIDE.md) - Advanced features
 
 ## 📚 Additional Resources
 
