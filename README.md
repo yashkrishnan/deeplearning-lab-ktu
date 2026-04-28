@@ -43,6 +43,70 @@ Navigate to `http://localhost:5000` in your web browser.
 
 For detailed web interface documentation, see [web_interface/README.md](web_interface/README.md)
 
+## 🐍 Using Virtual Environment (Recommended)
+
+It's highly recommended to use a virtual environment to avoid dependency conflicts:
+
+### Option 1: Using venv (Python built-in)
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+cd web_interface
+pip install -r requirements.txt
+cd ..
+
+# Run web interface
+cd web_interface
+python app.py
+```
+
+### Option 2: Using conda
+
+```bash
+# Create conda environment
+conda create -n dl-lab python=3.9
+
+# Activate environment
+conda activate dl-lab
+
+# Install dependencies
+pip install -r requirements.txt
+cd web_interface
+pip install -r requirements.txt
+cd ..
+
+# Run web interface
+cd web_interface
+python app.py
+```
+
+### Deactivating Virtual Environment
+
+When you're done:
+```bash
+# For venv:
+deactivate
+
+# For conda:
+conda deactivate
+```
+
+**Benefits of Virtual Environment:**
+- Isolated dependencies from system Python
+- Prevents version conflicts with other projects
+- Easy to reproduce exact environment
+- Clean uninstall by simply deleting the environment
+
 ## 📚 Overview
 
 This repository contains 10 self-contained lab activities designed for academic learning. Each lab includes:
